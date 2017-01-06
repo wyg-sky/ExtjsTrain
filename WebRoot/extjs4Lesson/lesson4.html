@@ -1,0 +1,195 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>ExtJS 4.2教程-04：数据模型</title>
+<!-- 在使用ExtJS的时候，我们必须要引用脚本和样式两部分。 脚本的内容可以通过bootstrap.js来自动添加 -->
+<script src="../js/extjs 4.2.1/bootstrap.js"></script>
+<!-- 引入汉语的本地化文件 -->
+<script src="../js/extjs 4.2.1/locale/ext-lang-zh_CN.js"></script>
+<!-- neptune 是在4.2中新增的样式，看上去比较现代一些，但不支持IE6 -->
+<link href="../js/extjs 4.2.1/resources/css/ext-all-neptune.css" rel="stylesheet" />
+
+<script type="text/javascript">
+
+/**
+ * 一、自定义数据模型 
+ *
+ * 在上一节中，我们使用Ext.define 来自定义类，通过Ext.define 定义的类都默认继承自Ext.base 类。
+ * 如果我们将extend 设置为Ext.data.Model，那么定义的类就是一个数据模型类了。
+ * 先定义一个简单的数据模型类 User类
+ *
+ * 二、字段类型和转换器
+ * 在定义数据模型的时候，我们可以定义字段的类型和该类型的转换器。
+ * 例如，我们将为User类添加birthday字段，在初始化的时候，我们可能会传入一个字符串类型的日期格式，
+ * 这个时侯就需要我们来定义一个类型转换器，将字符串格式的日期转换为Date类型。
+ */
+ 
+ Ext.define('User',{
+	 //extend 指定继承那个类
+	 extend : 'Ext.data.Model',
+	 //fileds 字段集合,指定字段属性,数组类型。有字段名称name->'age',字段类型type->'int'等属性。
+	 //有方法属性convert(value,record);字段转换器！
+	 fields : [{ name: 'name',     type: 'string' },
+	            { name: 'age',      type: 'int' },
+	           { name: 'phone', type: 'string'},
+	           {
+	               name: 'birthday',
+	               type: 'date',
+	               convert : function (value,record) {
+	                   if (Ext.isDate(value)){
+	                	   console.info('convert : function：'+value);
+	                	   return value;
+	                   }else if (Ext.isString(value)) {
+	                       return Ext.Date.parse(value, "Y-m-d");
+	                   }
+	               }
+	           }],
+	 //三、数据验证
+	 validations : [
+	      //为phone 字段添加验证，验证类型为length，最小为8，最大为15
+		 { field : 'phone', type : 'length', min : 8, max : 15 },
+		 {field:'age',type:'ageRule',min : 8, max : 15 }
+	 ]
+
+ });
+ 
+ /**
+ * 四、自定义验证规则
+ * ExtJS 中虽然内置了一些验证规则，但这些规则面对庞大的业务需求肯定是不够的，
+ * 所以ExtJS 还允许我们自定义验证规则。
+ * 在User类中，我们希望age字段的值在0到150之间，我们来自定义一个验证规则
+ **/
+ 
+ Ext.apply(Ext.data.validations,{
+	 ageRuleMessage: '必须在0到120之间',
+	 ageRule : function(config,value){
+		 if(value === undefined || value === null){
+			 return false;
+		 }
+		 if(value < 0 || value > 120){
+			 return false;
+		 }
+		 return true;
+	 }
+ });
+ 
+ //尽管我们已经引入了汉化包，但是ExtJS 的验证错误提示是没有进行汉化的，
+ //为了能让他显示为中文，我们需要手动的来将其汉化
+ Ext.data.validations.lengthMessage = "长度错误"; 
+ 
+ /*
+ *最后、Gridpanel 实例
+ **/
+ //1.定义一个Model名称叫MyModel，
+ //俩个字段，一个name字符串类型，一个age整数类型，且age有convert转换函数每次都是value-2
+ Ext.define('MyModel', {
+	    extend: 'Ext.data.Model',
+	    fields: [
+	        {name: 'name', type: 'string'},
+	        {name: 'age', type: 'int',
+	            convert: function(value, record) {
+	                return value - 2;
+	            }
+	        }
+	    ]
+	});
+//2.定义一个Store数据源，就像仓库或者数据表一样，存放一条一条的真实数据。
+//根据什么类型的模型来放数据呢，根据指定的Model来存放数据，此处指定的是MyModel模型。
+//所以只能存放俩个字段：name和age俩个字段的数据值。
+	var userStore = Ext.create('Ext.data.Store', {
+		//此处的model是可以指定的，还可以指定AModel，BModel，CModel等.
+		//则存储的数据data-->也要按照指定的Model类型来存放数据。
+	    model: 'MyModel',
+	    data: [
+	        {name: '张三1', age: 25},
+	        {name: '张三2', age: 26},
+	        {name: '张三3', age: 27}
+	    ]
+	});
+
+	
+ Ext.onReady(function(){
+	 
+	 var TomHanks = Ext.create('User',{
+	     name : '汤姆汉克斯',
+	     age : 38,
+	     phone : '010-12',
+	     birthday:'1978-12-10'
+	 });
+   /*
+     * 在代码中可以看出，数据模型类其实就是一个继承自Ext.data.Model 的类。
+     * fields 属性中定义了该模型的字段，它可以是对应到数据库中的字段。
+     * 在使用的时候，数据模型包含的字段和类的属性使用方式不太相同。
+     * 要访问字段的值，需要视同get 和 set 方法，例如：get('name');get('age');set('name',"王");set('age',30);
+     */
+	 console.log(TomHanks.get('age'));
+	 console.log(TomHanks.get('phone'));
+	 console.log(TomHanks.get('birthday'));
+	  console.dir(TomHanks.raw);
+	 console.dir(TomHanks);
+	 TomHanks.set('age',-18);//设置一个负值
+	 console.log("Changed TomHanks.age："+TomHanks.get('age'));
+	 TomHanks.set('birthday','1988-10-10');
+	 console.log("Changed TomHanks.brithday："+TomHanks.get('birthday')); 
+	 
+	 /*
+	 * 三、数据验证  如何使用。
+	 */
+	 var errors = TomHanks.validate();//validate()该方法返回一个Ext.data.Errors错误集合对象
+	 var errorMsg = [];//声明一个数值，存放错误消息提示语.
+	 if(!errors.isValid()){//isValid()判断集合中有没有错误.(没有错误返回true,有错误返回false)
+		 errors.each(function(error){
+			 errorMsg.push(error.field+"---->"+error.message);
+		 });
+		 console.log("errorMsg:"+errorMsg.join('<br />'));
+	 }
+
+	 
+	 /*
+	  *最后、Gridpanel 实例
+	  **/
+     Ext.create('Ext.grid.Panel', {
+         renderTo: Ext.getBody(),
+         store: userStore,
+         width: 400,
+         height: 200,
+         title: 'Grid Panel',
+         floating:true,   
+         frame:true,  //圆角 
+         draggable:{  //拖动  
+        	  insertProxy:false,  //拖动时不虚线显示原始位置  
+          },  
+          endDrag:function(e){  
+            this.panel.setPosition(this.x,this.y);  
+          },  
+         
+         columns: [
+             {
+                 text: 'Name',
+                 flex: 1,
+                 dataIndex: 'name'
+             },
+             {
+                 text: 'Age',
+                 flex: 1,
+                 dataIndex: 'age'
+             }
+         ]
+     });
+	 
+ });
+
+</script>
+
+
+</head>
+<body>
+	<h1 style="text-align: center;">
+	自定义数据模型</h1>
+	<h3 style="text-align: center;">
+	在上一节中，我们使用Ext.define 来自定义类，通过Ext.define 定义的类都默认继承自Ext.base 类。<br>
+	如果我们将extend 设置为Ext.data.Model，那么定义的类就是一个数据模型类了。
+	</h3>
+</body>
+</html>

@@ -1,0 +1,162 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>ExtJS 4.2教程-06：服务器代理（proxy）</title>
+<!-- 在使用ExtJS的时候，我们必须要引用脚本和样式两部分。 脚本的内容可以通过bootstrap.js来自动添加 -->
+<script src="../js/extjs 4.2.1/bootstrap.js"></script>
+<!-- 引入汉语的本地化文件 -->
+<script src="../js/extjs 4.2.1/locale/ext-lang-zh_CN.js"></script>
+<!-- neptune 是在4.2中新增的样式，看上去比较现代一些，但不支持IE6 -->
+<link href="../js/extjs 4.2.1/resources/css/ext-all-neptune.css" rel="stylesheet" />
+<style type="text/css">
+.title{
+    display: block;
+    font-size:20px;
+    color: red;
+    font-weight: bold;
+}
+</style>
+<script type="text/javascript">
+
+//设置一个总的URL路径
+var rootUrl = "http://localhost:19090/ExtjsTest"
+
+Ext.onReady(function(){
+	/**
+	 *  一、Ajax
+	 *  web应用程序开发过程中，与服务器端交互的技术最常用的就是Ajax了。
+	 *  Ajax 是使用Javascript创建一个HttpRequest，采用异步的方式从服务器获取数据。
+	 **/
+	 /*
+	 * 1.先创建一个简单的实例，请求获取WebRoot/js/MyApp路径下test.json文件里面的数据
+	 */
+	//①.创建一个Model模型User
+	Ext.define('User',{
+		extend : 'Ext.data.Model',
+		fields : ['id','name','email']
+	});
+	//②.一个包含AjaxProxy代理的Store, 使用参数方式绑定.
+	/*
+			var ajaxProxy = new Ext.data.proxy.Ajax({
+			    url: 'users.json',//请求的url
+			    model: 'User',//对应的数据模型
+			    reader: 'json'//获取读取类型-json类型即默认的JsonReader
+			});
+	*/
+	var AjaxStore = Ext.create('Ext.data.Store',{
+		model : 'User',
+		proxy : {
+			//Proxy的默认Reader为JsonReader.
+			reader:{
+				type:'json',//设置类型为json类型
+				root: 'users' //设置reader的'root'来匹配返回结果对象的数据结构
+			},
+			type:'ajax',
+			//url:'../js/MyApp/test.json'
+			url : rootUrl + '/getTestJson.do'
+		}
+	});
+	/**
+	       AjaxStore.load();之后查看数据是空的！！！
+	       难道我们没有请求到数据？当然不是，如果你打开网络跟踪，会发现程序已经将成功得到了这段JSON字符串。
+	       那是为什么仍然是空呢？
+	       原因是当我们调用load()方法的时候，我们告诉store去请求数据吧，然后store就使用ajax的方式请求url，
+	       注意，ajax 是异步的，所以当我们调用load()方法以后，马上执行输出的时候，store仍然是空的，可能它还在等待服务器响应数据。
+	
+	       AjaxStore.load();
+	       var msg = [];
+	       AjaxStore.each(function (user) {
+	           msg.push(user.get('id') + ' ' + user.get('name')+' '+user.get('email'));
+	       });
+	       console.info(AjaxStore.getRange());
+	       console.info("第一次加载数据："+msg.join('<br />'));//加载之后数据为空的!?
+	       
+	       **/
+	
+	
+	/*
+	*   所以，在我们使用ajax方式加载数据的时候，就需要为load() 方法添加一个callback 方法，
+    *   当数据加载完成以后，再callback方法中进行数据输出，修改load方法的调用：
+	*/
+    AjaxStore.load({
+    	//带参数的请求
+    	page: 2,
+        limit: 10,
+        params: {
+            name:'QF'
+        },
+        //设置作用域
+    	scope: this,
+    	//回调函数
+    	callback: function (records, operation, success) {
+    		console.info('records : 返回的数据记录数组');
+    		console.log(records);
+    		Ext.Object.each(records, function(key, value, myself) {
+    		    console.log("id->"+value.data.id+", name->"+value.data.name+",email->"+value.data.email);
+    		});
+    		
+    		console.info('operation : 对象 operation 包含,所有 load 操作的详细信息.');
+            console.info(operation);
+            console.info('success : 加载是否成功.');
+            console.info(success);
+            if (success) {
+                var msg = [];
+                AjaxStore.each(function (user) {
+                    msg.push("id->"+user.get('id') + ', name->' + user.get('name')+', email-> '+user.get('email'));
+                });
+                console.info(msg);
+            }
+        }
+    });
+	
+    /**
+    *   在这个URL中可以看到，ExtJS 其实已经为我们添加了一些参数，包括 page、start和limit。
+    *   这些参数是从哪儿来的呢？
+    *   在使用ajax进行请求的时候，ajax代理会调用自身的read方法，
+    *   该方法的第一个参数是Ext.data.Operation 类型，它用来配置我们如何进行请求。
+    *   我们在load 方法中可以通过配置项传递一些参数，load在调用read方法时将这些参数传递过去，
+    *   read则会根据这些参数自动生成Ext.data.Operation 的一个实例。
+    *   
+    *   AjaxProxy会自动将排序,过滤,翻页和分组参数添加到生成的url中. 可以使用下面这些属性来配置这些参数:
+	    	①pageParam - 控制如何向服务器发送页数(同样参见startParam和limitParam)
+	    	②sortParam - 控制如何向服务器发送排序信息
+	    	③groupParam - 控制如何向服务器发送分组信息
+	    	④filterParam - 控制如何向服务器发送过滤信息
+	    	
+	    	//创建一个Ext.data.Operation，设置参数
+	    	var operation = new Ext.data.Operation({
+	    	    action: 'read',
+	    	    start : 50,
+	    	    limit : 25
+	    	});
+            //创建一个Ajax代理,也可以自定义参数
+	    	var proxy = new Ext.data.proxy.Ajax({
+	    	    url: '/users',
+	    	    defindeParam:"自定义参数1",
+	    	    elseName : "自定义参数2"
+	    	});
+	        //用代理read读取并配置参数到ajax代理中.
+	    	proxy.read(operation); //地址栏中的GET方法里面就会出现如下信息 /users?start=50&limit=25&defindeParam=自定义参数1&elseName=自定义参数2
+    **/
+	
+});
+
+</script>
+</head>
+<body>
+<h1 align="center">ExtJS 4.2教程-06：服务器代理（proxy）</h1>
+<table style="margin-left: 50px;font-size: 20px;">
+<tr><td>
+<span class="title">服务器端代理：</span>
+    1.Ajax：在当前域中发送请求<br>
+    2.JsonP：跨域的请求<br>
+    3.Rest：与服务器进行RESTful（GET/PUT/POST/DELETE）交互<br>
+    4.Direct：使用  Ext.direct.Manager 发送请求<br><br>
+
+	在上一节我们介绍了客户端的几种代理，本节的主要内容是介绍如何使用服务器端代理，
+	将重点介绍<font style="font-weight:bold;">AjaxProxy</font>，这是我们最常用的代理方式。
+</td></tr>
+</table>
+</body>
+</html>

@@ -1,0 +1,292 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>ExtJS 4.2教程-05：客户端代理（Proxy）</title>
+<!-- 在使用ExtJS的时候，我们必须要引用脚本和样式两部分。 脚本的内容可以通过bootstrap.js来自动添加 -->
+<script src="../js/extjs 4.2.1/bootstrap.js"></script>
+<!-- 引入汉语的本地化文件 -->
+<script src="../js/extjs 4.2.1/locale/ext-lang-zh_CN.js"></script>
+<!-- neptune 是在4.2中新增的样式，看上去比较现代一些，但不支持IE6 -->
+<link href="../js/extjs 4.2.1/resources/css/ext-all-neptune.css" rel="stylesheet" />
+<style type="text/css">
+.title{
+    display: block;
+    font-size:20px;
+    color: red;
+    font-weight: bold;
+}
+</style>
+<script type="text/javascript">
+
+/**
+ * 
+ *代理（proxy）是用来加载和存取Model 数据的。
+ * 在开发过程中，我们一般不会直接操作代理，它会很好的配合Store 完成工作，
+ *  所以在本节内容中，我们主要讲解各种proxy的用法。
+ * 
+ * 代理（proxy）分为两大类：客户端代理和服务器端代理。
+ * 客户端代理主要完成与浏览器本地存取数据相关的工作，服务器端代理则是通过发送请求，从服务器端获取数据。
+ * 根据各自获取数据的方式，客户端代理和服务器端代理又可以分为一下几种：
+ *
+ *  一、客户端代理：
+ *      1.LocalStorageProxy：将数据存储在localStorage中，此种方式可以持久的将数据存储在客户端。
+ *          LocalStorageProxy使用最新的HTML5本地数据库API, 将Model数据保存在本地客户端. 
+ *          HTML5本地数据库是一个 键值对存储(例如 不能存储像JSON这样的复杂对象), 
+ *          因此LocalStorageProxy在保存和读取数据时, 自动进行序列化和反序列化. 
+ *
+ *      2.SessionStorageProxy：将数据存储在sessionStorage中，此种方式只在当前会话中生效，当关闭浏览器以后，数据也会随之丢失。
+ *      3.MemoryProxy：将数据存储在内存中，此种方式只在当前页面有效，且如果刷新页面，数据将丢失。
+*
+ *  二、服务器端代理：
+ *      1.Ajax：在当前域中发送请求
+ *      2.JsonP：跨域的请求
+ *      3.Rest：与服务器进行RESTful（GET/PUT/POST/DELETE）交互
+ *      4.Direct：使用  Ext.direct.Manager 发送请求
+ */
+
+ /**
+ * 一.①、LocalStorageProxy
+ *  1.首先要有一个数据模型类 Model
+ *  2.还需要一个Store
+ *  3.再创建一个LocalStorageProxy
+ *  4.将代理和Store联系起来（可以在Model 或 Store 中直接使用proxy 选项）
+ *  5.可以保存数据到LocalStorage
+ *  6.要想得到数据，我们需要先将数据从LocalStorage中加载到Store中，然后对Store 进行遍历
+ */
+ 
+ //1.先创建模型
+ Ext.define('Person',{
+	 extend : 'Ext.data.Model',
+	 fields : ['name','age']
+ });
+ 
+ //2.创建Store 仓库
+ var personStore = Ext.create('Ext.data.Store',{
+	 model : 'Person'
+ });
+
+ //3.创建LocalStorageProxy代理
+ var personStorage = new Ext.data.proxy.LocalStorage({
+	 id : 'person_LocalStorage',
+	 model : 'Person'
+ });
+ Ext.onReady(function(){
+	//4.代理和Store联系起来
+	 personStore.setProxy(personStorage);
+	 
+	 //5.向LocalStorage中添加数据
+	personStore.add({name:'abc.com',age:30});
+	personStore.add({ name: 'www.qeefee.com', age: 12 });
+	personStore.add({ name: 'www.qeefee2.com', age: 15 });
+	personStore.add({ name: 'qf.com', age: 26 });
+	personStore.add({ name: 'qifei.com', age: 26 });
+	
+	personStore.sync();//数据保存到本地数据库
+	/*
+	*  在调用store.sync()时, LocalStorageProxy会自动给新的personStore数据分配一个id. 
+	*  然后序列化数据并放入本地数据库中. 我们也可以绕过Store, 直接保存数据到本地库.
+	*  使用配置的LocalStorageProxy来把新personStorage保存到本地库
+    *   personStorage.save();  
+	*/
+
+	//6.先将数据从LocalStorage中加载到Store中，然后对Store 进行遍历：
+	//从本地数据库中加载【全部】已经存在的数据.
+	personStore.load();
+	/*
+	* 一.②、过滤与排序(Filtering and Sorting)
+	* 使用load方法会将所有的数据都加载到Store中，
+	* 如果我们需要进行查询指定的数据，就要用到filter方法了
+	*/
+	personStore.filter("name", /\.com$/);//这个filter过滤以.com结尾的name字段
+	//多个过滤条件：
+	personStore.filter([
+        { property: "name", value: /\.com$/ },
+        { filterFn: function (item) { return item.get("age") > 10; } }
+    ]);
+	
+	/*
+	*   以上这两个过滤条件是“and”的关系。
+    *   注意第二个过滤条件，它传入的是一个方法，这种方式可以方便我们自定义过滤条件，
+    *   如果我们的业务需求比较复杂，我们可以使用过滤方法替代这些过滤条件：
+	*  personStore.filter(function (item) {
+	*      return item.get("age") > 10 && item.get('name').length > 3;
+	*  });
+	*  这里我们过滤age大于10，且名字长度大于3的数据，
+	*/
+	personStore.sort('age', 'DESC');//按照年龄进行倒序排序
+	var msg = [];
+	personStore.each(function (person) {
+	    msg.push(person.get('name') + ' ' + person.get('age'));
+	});
+	Ext.MessageBox.alert('提示', msg.join('<br />'));
+	//clear()方法销毁所有存储的数据记录, 删除所有本地库中服务当前代理的键和值.
+	//personStorage.clear(); 
+	
+	/*
+	*  一.③、更新操作
+	*  1.先获取要更新的数据Record;
+	*  2.修改该Record中指定的属性值，如修改name属性为'123';
+	*  3.修改完成之后保存.
+	*/
+	var oneRecord = personStore.first();//得到第一个person对象record记录
+	oneRecord.set('name',"WangTest.com");//修改名字字段
+	personStore.sync();//保存到本地
+	
+	//查看记录是否已修改
+	//从本地数据库中加载【全部】已经存在的数据.
+    personStore.load();
+	/*
+	* Array.splice(startIndex, num, Object... elements);开始位置，变动数量，需要添加或者替换的对象元素。
+	* 此处msg.splice(0,msg.length); 代表删除数值中的元素。
+	* msg数组删除位置从下标0开始删除，一共删除msg.length个元素.
+	*/
+    msg.splice(0,msg.length);
+	personStore.each(function (person) {
+        msg.push(person.get('name') + ' ' + person.get('age'));
+    });
+	console.log("查看是否改变name————>为'WangTest'.");
+    console.log("msg："+msg);
+	/*
+    *  一.④、删除操作
+    *  1.先获取要删除的数据Record,移除上面刚获取的oneRecord;
+    *  2.移除该Record元素;
+    *  3.删除完成之后保存.
+    */
+    //重新加载
+    personStore.load();
+    oneRecord = personStore.first();//得到第一个person对象record记录
+    personStore.remove(oneRecord);//删除元素
+	personStore.sync();
+	//重新加载
+	personStore.load();
+	msg.splice(0,msg.length);
+	personStore.each(function(person){
+		msg.push(person.get('name') +'-->'+ person.get('age'));
+	});
+	console.log("查看是否已经删除name—>为'WangTest'的元素.");
+    console.log("msg："+msg);
+    //clear()方法销毁所有存储的数据记录, 删除所有本地库中服务当前代理的键和值.
+    personStorage.clear();
+    
+    
+    /*
+    *   二.① SessionStorageProxy
+    *   SessionStorageProxy 的用法与LocalStorageProxy 的用法基本一致，
+    *   我们这次在Model中添加proxy 的配置项
+    *   1.定义模型Model-在Model中添加proxy 的配置项
+    *   2.创建Store仓库-与Model关联，存放数据.
+    *   3.使用Store。
+    */
+    //1.创建SessionPerson模型
+    Ext.define('SessionPerson',{
+    	extend : 'Ext.data.Model',
+    	fields : [
+    		{name:'name',type:'string'},
+    		{name:'age',type:'int'}
+    	],
+    	proxy : {
+    		type:'sessionstorage',
+    		id:'mySessionProxy'
+    	}
+    });
+    //在Model中加入代理配置以后，我们就不需要单独的定义代理对象了，可以直接使用Store来对其进行操作.
+    //2.创建Store仓库
+    var SessionPersonStore = Ext.create('Ext.data.Store',{
+    	model:'SessionPerson'
+    });
+    /*
+    *   二.②、添加数据
+    */
+    SessionPersonStore.add({name:'第一个元素',age:35});
+    SessionPersonStore.add({name:'第2个元素',age:-12});
+    SessionPersonStore.add({name:'第3个元素',age:3});
+    SessionPersonStore.add({name:'第四个元素',age:135});
+    SessionPersonStore.sync();//保存
+    /*
+    *二.③、遍历数据
+    **/
+    SessionPersonStore.load();
+    var msgS = [];
+    SessionPersonStore.each(function(sessionPerson){
+    	msgS.push(sessionPerson.get('name')+" "+sessionPerson.get('age'));
+    });
+    console.log("SessionPersonStore  msgS : ");
+    console.log(msgS);
+    
+    /*
+    *   三.①MemoryProxy 
+    *   MemoryProxy 是将数据存储在内存中的，它只在当前页生效，如果关闭或刷新页面，所有数据都将丢失。
+    *   在使用MemoryProxy 的时候，我们需要为Store指定一个数据集（类似于缓存），
+    *   store 将通过代理对这个数据集进行操作
+    *
+    *   1.定义模型Model
+    *   2.创建Store仓库-在Store中关联Proxy代理配置 （注意MemoryProxy需要设置data缓存数据）
+    *   3.当store定义的时候设置缓存数据后，它就会自动的将数据加载到Store中，
+    *       所以在我们访问数据的时候不需要再调用load方法，可以直接遍历store.
+    */
+    //1.定义模型
+    Ext.define('MemoryPerson',{
+    	extend : 'Ext.data.Model',
+    	fields:['name','age']
+    });
+    //2.定义缓存数据
+    var data = {
+    	users : [
+    		{name:'内存代理数据一',age:25},
+    		{name:'内存代理数据二',age:18},
+    		{name:'内存代理数据三',age:32}
+    	]	
+    };
+    //3.创建Store仓库，并关联proxy代理配置
+    var MemoryPersonStore = Ext.create('Ext.data.Store',{
+    	model:'MemoryPerson',
+    	data:data.users,
+    	proxy:{
+    		type:'memory',
+    		//root:'users',
+    		id:'myMemoryProxy'
+    	}
+    });
+    //添加数据
+    MemoryPersonStore.add({ name: 'qifei', age: 26 });
+    MemoryPersonStore.sync();
+    
+  //读取数据
+    var msgM = [];
+    MemoryPersonStore.each(function (memoryPerson) {
+    	msgM.push(memoryPerson.get('name') + ' ' + memoryPerson.get('age'));
+    });
+    Ext.MessageBox.alert('提示', msgM.join('<br />'));
+    console.log("MemoryPersonStore  msgM : ");
+    console.log(msgM);
+    
+ });
+</script>
+</head>
+<body>
+<h1 align="center">ExtJS 4.2教程-05：客户端代理（Proxy）</h1>
+<font size="3">
+代理（proxy）是用来加载和存取Model 数据的。<br>
+在开发过程中，我们一般不会直接操作代理，它会很好的配合Store 完成工作，所以在本节内容中，我们主要讲解各种proxy的用法。
+<br><br>
+代理（proxy）分为两大类：客户端代理和服务器端代理。<br>
+客户端代理主要完成与浏览器本地存取数据相关的工作，服务器端代理则是通过发送请求，从服务器端获取数据。
+<br><br>
+
+根据各自获取数据的方式，客户端代理和服务器端代理又可以分为一下几种：<br><br>
+<span class="title">客户端代理：</span>
+    1.LocalStorageProxy：将数据存储在localStorage中，此种方式可以持久的将数据存储在客户端。<br>
+    2.SessionStorageProxy：将数据存储在sessionStorage中，此种方式只在当前会话中生效，当关闭浏览器以后，数据也会随之丢失。<br>
+    3.MemoryProxy：将数据存储在内存中，此种方式只在当前页面有效，且如果刷新页面，数据将丢失。<br>
+<br><br>
+<span class="title">服务器端代理：</span>
+
+    1.Ajax：在当前域中发送请求<br>
+    2.JsonP：跨域的请求<br>
+    3.Rest：与服务器进行RESTful（GET/PUT/POST/DELETE）交互<br>
+    4.Direct：使用  Ext.direct.Manager 发送请求<br>
+</font>
+
+</body>
+</html>

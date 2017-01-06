@@ -1,0 +1,91 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>ExtJS 4.2教程-02：bootstrap.js 工作方式</title>
+<style type="text/css">
+body{ font-family:"微软雅黑";}
+.table5{text-align:left; border:1px dashed #D2E9FF; border-radius :3px; background-color:#FFFFAA; width:650px;}
+
+</style>
+</head>
+<body>
+<h3>ExtJS 4.2教程-02：bootstrap.js 工作方式</h3>
+
+在上一篇中，我们将bootstrap.js引入页面，并没有直接引用ExtJS的脚本文件，而是通过bootstrap在启动的时候动态的选择要将哪些extjs脚本添加到页面中。在本文中我们来介绍一下bootstrap.js的工作方式。<br>
+
+我们在Google Chrome 浏览器中，打开开发人员工具（关于在Google Chrome 浏览器中调试Javascript代码，参考我之前的文章 <a href="http://www.qeefee.com/js/debug-javascript-in-chrome" target="_blank">《在Chrome 中调试Javascript》）</a><br>
+
+打开开发人员工具之后，点击Network标签，然后刷新页面，这时我们就跟踪到了所有文件的请求：<br><br>
+<img alt="Chrome 浏览器开发者工具" src="../image/ext4/lesson2_pic1.png"><br><br>
+
+可以看到，尽管我们没有在页面中引用ext-all-dev.js 文件，但页面仍然进行将这个脚本加入了页面的引用，<font color="red" style="font-weight:bold;">而它的引入者（Initiator 列）是bootstrap.js。</font>
+<p style="font-color:red;">
+由此可以考出，<font style="font-weight:bold;">bootstrap.js 会自动为我们添加ext 的引用</font>，那么它是怎么确定要引用哪个ExtJS文件的呢？我们的目录中有分别有三个文件：<br>
+<font color="red" style="font-weight:bold;">
+    ext-all-debug.js：用于调试时引用<br/>
+    ext-all-dev.js：用于开发时引用<br/>
+    ext-all.js：在发布时引用<br/>
+</font>
+</p><br/>
+所幸我们有bootstrap.js文件的源代码，打开看一下源代码，在注释部分有文件引用的说明：<br/>
+<table class="table5">
+	<tr>
+		<td>
+			<font color="#5B5B00" style="font-weight:bold;">
+				/**<br/>
+				 * Load the library located at the same path with this file<br/>
+				 *<br/>
+				 * Will automatically load ext-all-dev.js if any of these conditions is true:<br/>
+				 * - Current hostname is localhost<br/>
+				 * - Current hostname is an IP v4 address<br/>
+				 * - Current protocol is "file:"<br/>
+				 *<br/>
+				 * Will load ext-all.js (minified) otherwise<br/>
+				 */
+			 </font>
+		</td>
+	</tr>
+</table>
+<br>这段注释的大概意思是：<br>
+<table class="table5">
+    <tr>
+        <td>
+            <font color="#0066CC" style="font-weight:bold;">
+				/**<br/>
+				 * 加载本文件相同路径中的库<br/>
+				 *<br/>
+				 * 满足以下条件将自动加载 ext-all-dev.js：<br/>
+				 * - 当前主机名是 localhost<br/>
+				 * - 当前主机名是 IP v4 地址<br/>
+				 * - 当前协议是 "file:"<br/>
+				 *<br/>
+				 * 其它情况下将加载 ext-all.js (minified)<br/>
+				 */
+			 </font>
+        </td>
+    </tr>
+</table>
+<br/><br/>
+<p>很显然，我们的主机名是localhost，bootstrap.js自动为我们加载了 ext-all-dev.js。</p>
+
+<p>我们要验证一下是否在发布环境中，bootstrap能够为我们自动加载ext-all.js，该怎么做呢？</p>
+
+<p>方法是修改我们的 hosts 文件，这个文件在系统盘的 Windows\System32\drivers\etc 中，我们打开这个目录：</p>
+
+<img alt="Chrome 浏览器开发者工具" src="../image/ext4/lesson2_pic2.png"><br><br>
+
+打开hosts文件，添加以下两行内容：<br>
+
+127.0.0.1     abc.com<br>
+127.0.0.1     www.abc.com<br><br>
+
+hosts 文件的作用就是将DNS服务器的作用，用来将域名 abc.com 和 www.abc.com 解析到我们本机（地址是127.0.0.1）。<br>
+
+接下来我们在浏览器中使用域名来浏览sampleExtJS：<br>
+
+<img alt="Chrome 浏览器开发者工具" src="../image/ext4/lesson2_pic3.png" style="width:850px;height:450px;">
+
+<p>在Network网格中可以看到，这次加载的文件是ext-all.js，这个文件是被压缩过的，可以减少很多网络流量，适合于发布的环境。</p><br>
+</body>
+</html>

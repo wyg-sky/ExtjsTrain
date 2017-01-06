@@ -1,0 +1,175 @@
+
+教程地址：http://www.runoob.com/json/json-tutorial.html
+
+JSON: JavaScript Object Notation(JavaScript 对象表示法)
+
+JSON 是存储和交换文本信息的语法。类似 XML。
+
+JSON 比 XML 更小、更快，更易解析。
+
+
+什么是 JSON ？
+
+    JSON 指的是 JavaScript 对象表示法（JavaScript Object Notation）
+    JSON 是轻量级的文本数据交换格式
+    JSON 独立于语言 *
+    JSON 具有自我描述性，更易理解
+
+* JSON 使用 JavaScript 语法来描述数据对象，但是 JSON 仍然独立于语言和平台。
+JSON 解析器和 JSON 库支持许多不同的编程语言。
+JSON - 转换为 JavaScript 对象
+
+JSON 文本格式在语法上与创建 JavaScript 对象的代码相同。
+
+由于这种相似性，无需解析器，JavaScript 程序能够使用内建的 eval() 函数，用 JSON 数据来生成原生的 JavaScript 对象。
+
+
+
+一、JSON实例：
+{"sites": [
+        { "name":"菜鸟教程" , "url":"www.runoob.com" }, 
+        { "name":"google" , "url":"www.google.com" }, 
+        { "name":"微博" , "url":"www.weibo.com" }
+    ]
+}
+
+二、JSON 语法规则
+JSON 语法是 JavaScript 对象表示法语法的子集。
+    1.数据在名称/值对中  （如: name:"张三"   等同于 name="张三"）
+    
+    2.数据由逗号分隔  （如:  id : '123456', name:'张三', age:'24'）
+    
+    3.花括号保存对象 （如: 只要是js对象最外层就要加上花括号，） 
+        下面是一个名称为'user'的对象-> "user":{"id":"123456", "name":"张三", age:36, flag:true}
+
+    4.方括号保存数组 （只要是数组类型的，就要在方括号里面。）
+        下面是一个名称为'userList'的数组对象->这个数组里面包含了4个元素，这4个元素是字符串类型.
+        "userList": ["name1","name2","name3","name4"]
+
+
+下面介绍一下，JSON实例中的这个 sites 对象。
+{"sites": [
+        { "name":"菜鸟教程" , "url":"www.runoob.com" }, 
+        { "name":"google" , "url":"www.google.com" }, 
+        { "name":"微博" , "url":"www.weibo.com" }
+    ]
+}
+理解： 最外层是一个大括号{},表示一个对象，而这个最外层的对象是没有名字的。我们暂且给这个无名对象起一个名字
+叫obj对象，在这个obj对象中，有一个名称为"sites"的数组对象，这个数组中包含3个元素(用逗号隔开的3个元素)，
+这3个元素是对象类型的，而每个对象元素中都含有2个属性：名称为'name'的属性和名称为'url'的属性。
+
+三、JSON的使用
+
+var txt = '{ "users" : [' +
+                '{ "name":"王小五" , "age":12 },' +
+                '{ "name":"赵小六" , "age":15  },' +
+                '{ "name":"燕小七" , "age":17  } ]}';
+1.以上创建了一个字符串名为txt，这个txt赋与的值是【仿JSON对象格式】的拼接的字符串！
+赋值的就是一段字符串，但是格式要仿照JSON对象的格式赋值，否则转换为JSON对象时会报错。
+报错原因：因为拼接的JSON字符串不符合JSON对象的语法格式，所以要重新检查拼接是否正确，拼接犯错是经常行的问题！！！
+
+var obj = eval ("(" + txt + ")");
+
+2. JavaScript 函数 eval() 可用于将 JSON 字符串文本转换为 JavaScript 对象（JSON对象）。
+eval() 函数使用的是 JavaScript 编译器，可解析 JSON 文本，然后生成 JavaScript 对象。
+必须把文本包围在括号中，这样才能避免语法错误： var obj = eval ("(" + txt + ")"); 
+
+注意：【使用方法】eval()是个函数，这个函数需要传入一个JSON字符串文本，这个JSON文本必须要被"( )"括号括起来
+而这个JSON字符串文本，要被括号括起来，这个括号也要是字符串类型，所以传入这样的： "("+JSON文本+")"。
+
+console.dir(obj.users[0]);
+console.info(obj.users[1].name);
+console.info(obj.users[1].age);
+
+3.访问JSON对象，通过对象.属性即可方法，若是多个对象嵌套，则通过【对象.对象.对象.属性】访问。
+obj.users[0]->访问obj对象里面的users[0]对象。
+obj.users[1].name->访问obj对象里面的users[1]对象的name属性。
+obj.users[1].age->->访问obj对象里面的users[1]对象的age属性。
+
+四、JSON对象-文本 推荐转换方式
+
+1.>jQuery插件支持的转换方式
+$.parseJSON( jsonstr ); //jQuery.parseJSON(jsonstr),可以将json字符串转换成json对象 
+
+
+2.>浏览器支持的转换方式(Firefox，chrome，opera，safari，ie9，ie8)等浏览器 (推荐)
+JSON.parse(jsonStr); //可以将JSON字符串转换成JSON对象
+JSON.stringify(jsonObj); //可以将JSON对象转换成JSON对符串 
+
+var jsonObj = JSON.parse(jsonStr);
+var jsonStr = JSON.parse(jsonObj);
+
+3.>Javascript支持的转换方式：不推荐
+eval('(' + jsonstr + ')'); //可以将json字符串转换成json对象,注意需要在json字符外包裹一对小括号
+但不推荐这些方式，这种方式不安全eval会执行json串中的表达式。 
+
+4>JSON官方的转换方式：
+http://www.json.org/提供了一个json.js,这样ie8(兼容模式),ie7和ie6就可以支持JSON对象以及其stringify()和parse()方法；
+可以在https://github.com/douglascrockford/JSON-js上获取到这个js，一般现在用json2.js。
+
+
+
+五、复杂的JSON对象语法
+
+{
+    "success": true,
+    "total": 1,
+    "root": [
+        {
+            "accountAmt": 0,
+            "approveDay": null,
+            "approveDept": null,
+            "approveStatus": "0001",
+            "approveUser": null,
+            "cashRate": 1,
+            "formula": "修旧利废收入-修旧利废支出 = 768-768",
+            "id": "4028db86580b166e015827f397c621c4",
+            "itsActivity": null,
+            "itsProject": null,
+            "modelType": "0001",
+            "modifyTime": "2016-11-03 10:10:25",
+            "reportDay": "2016-11-03",
+            "reportUser": "常村管理员",
+            "settlementAmt": 0,
+            "settlementCode": "0309",
+            "settlementMonth": "2016-03",
+            "settlementStatus": "0001",
+            "modifyUser": {
+                "code": "00004",
+                "email": null,
+                "id": "4028b8815523f5d5015524161b480011",
+                "loginName": "changcun",
+                "password": "8e1c7aa09c9b0a6459f3a3b2cdad0fbc",
+                "userName": "常村管理员",
+                "classType": "com.lion.system.user.model.UserView"
+            },
+            "organization": {
+                "code": "0101",
+                "description": "常村煤矿",
+                "disabled": false,
+                "expanded": false,
+                "grade": 1,
+                "id": "4028b881552347d401552361e11f0058",
+                "leaf": false,
+                "name": "常村煤矿",
+                "organiztionType": null,
+                "sapCode": null,
+                "sortOrder": 1,
+                "valid": "1",
+                "classType": "com.lion.system.organization.model.Organization"
+            },
+            "createUser": {
+                "code": "00004",
+                "email": null,
+                "id": "4028b8815523f5d5015524161b480011",
+                "loginName": "changcun",
+                "password": "8e1c7aa09c9b0a6459f3a3b2cdad0fbc",
+                "userName": "常村管理员",
+                "classType": "com.lion.system.user.model.UserView"
+            },
+            "createTime": "2016-11-03 10:10:25",
+            "remark": null,
+            "valid": "1"
+        }
+    ]
+}

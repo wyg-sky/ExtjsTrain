@@ -1,0 +1,215 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>ExtJS 4.2教程-03：使用Ext.define自定义类</title>
+<!-- 在使用ExtJS的时候，我们必须要引用脚本和样式两部分。 脚本的内容可以通过bootstrap.js来自动添加 -->
+<script src="../js/extjs 4.2.1/bootstrap.js"></script>
+<!-- 引入汉语的本地化文件 -->
+<script src="../js/extjs 4.2.1/locale/ext-lang-zh_CN.js"></script>
+<!-- neptune 是在4.2中新增的样式，看上去比较现代一些，但不支持IE6 -->
+<link href="../js/extjs 4.2.1/resources/css/ext-all-neptune.css" rel="stylesheet" />
+<script type="text/javascript">
+
+		/**
+		 * 一、ExtJS 中自定义类
+		 * 定义父类Person
+		 * 通过Ext.define 定义的类都默认继承自Ext.base 类
+		 */
+        Ext.define("Person",{
+        	Name : '',
+        	Age : 0,
+        	Say : function(msg){
+        		console.log(this.Name+" Say："+msg);
+        		//Ext.Msg.alert("提示",this.Name+" Say："+msg);
+        	},
+        	constructor : function(name,age){
+        		this.Name = name;
+        		this.Age = age;
+        	}
+        });
+		
+		/**
+		* 二、ExtJS 中类的继承
+		* 定义子类Developer，并继承父类Person
+		*/
+		Ext.define("Developer",{
+			extend : 'Person',
+			Coding : function(code){
+				console.log(this.Name+" 正在编码"+code);
+                Ext.Msg.alert("提示",this.Name+" 正在编码"+code);
+			},
+			/**
+			* 在构造函数中，通过调用this.callParent 方法(调用父类构造方法，arguments方法中的参数)，实现对属性的初始化。
+			* 需要说明的是，1.如果此处只调用了父类的构造方法，则可以省略掉，ExtJS 会自动为我们调用父类的构造函数。
+			* 2.如果你在子类中使用了构造函数，ExtJS 则不会再[自动调用]父类的构造函数,需要自己手动调用。
+			*
+			* 由于下面的构造方法里面只是调用了父类的构造函数，ExtJS 会自动为我们调用父类的构造函数。
+			* 所以我们此处的构造方法可以省略：
+			*
+			**/
+			
+			/* constructor : function(){
+				this.callParent(arguments);
+			} */
+			
+		});
+		
+		/*
+		* 三、ExtJS 中类的选项 - config
+		* 
+		*/
+		var  testWin = Ext.create("Ext.window.Window",{
+			title : "窗口测试",
+			width : 300,
+			height : 200
+		});
+		/*
+		* Ext.create("ClassName",{config}); 生成指定ClassName类名，指定属性配置项的一个对象！
+		* Ext.create 方法的第一个参数是类名，第二个参数是类的选项，它是一个JSON格式的对象，用来初始化要生成的对象！
+		**/
+		
+		/* 
+		*  试想一下，如果我们的类中有几十个属性，那么我们使用构造函数就要传入几十个参数来对它完成初始化，
+		*  这是一件很恐怖的事情。还好ExtJS 为我们提供了这种便利，我们可以在定义类的时候为它添加配置项，
+		*  然后调用ExtJS 内置的方法完成初始化，并可以生成访问器（类似于C#里面的get和set方法）。
+		*/
+		
+		//下面我们来重新定义一个动物了，通过config参数来初始化该类：
+		Ext.define("Animal",{
+			config : {
+				Name : '',
+				Color : ''
+			},
+			Cry : function(msg){
+				console.log("I'm " + this.Name + ", I Cry  : " +msg);
+				Ext.Msg.alert("提示","I'm " + this.Name + ", I Cry  !" +msg);
+			},
+			//注意：在构造函数中，通过调用this.initConfig方法完成对config的初始化
+			constructor : function(config){
+				this.initConfig(config);//调用ExtJS内置的方法完成初始化，并可生成访问器（属性的get和set方法）
+				//this.callParent(arguments);//手动调用父类的构造方法
+			}
+		});
+		
+		/*
+		*四、ExtJS 中类的别名 - alias
+		* 1.在生成Ext.window.Window时，它对应类的全称是 Ext.window.Window，但是我们通过它的别名Ext.Window也可以生成。
+		* 2.下面我们自定义一个别名类MyApp.Student（相当于为Student类添加了命名空间，类似于Java中的包名路径。）
+		*/
+		
+		Ext.define("MyApp.Student",{
+			config : {
+				Name : '',
+				Age : 0,
+				GradeClass : '三年级一班',
+				School : '泰安一中'
+			},
+			//起了个别名是Student, 还可以起张三，李四、王五，SB随便。
+			alias : 'Student',
+			//alias : 'ZhangSan',
+			//alias : 'SB',
+			SayHello : function(){
+				console.log("大家好，我是"+this.Name+"，来自于："+this.School+"，"+this.GradeClass);
+			},
+			constructor : function(config){
+				this.initConfig(config);
+			}
+		});
+		
+		/*
+		* 五、ExtJS 中的动态加载
+		* 1.如果Ext.loader 可用，且类还没有被定义，它将试图通过同步加载来加载类。(了解即可)
+		* window.rootUrl = "@Url.Content("~/")";
+		*   Ext.Loader.setConfig({
+		*	     enabled: true,
+		*	     paths: {
+		*	         MyApp: rootUrl + "Resources/js/MyApp"
+		*	     }
+		*	 });
+		*
+		*  2.另外，我们还可以手动的加载Person.js，代码如下：
+		*  Ext.require("MyApp.Person");
+		*   当手动加载MyApp.Person 类以后，我们就可以继续使用别名来定义类的对象了：
+	    *
+		*   var Tom = Ext.create("Person", {
+		*       Name: 'Tom',
+		*       Age: 26
+		*   });
+		*
+		*/
+		
+		//使用 Ext.require();方法之前，先要开启异步模式和配置文件位置
+		function init (){
+			Ext.Loader.setConfig({
+				enabled:true, //开启异步加载模式
+				 paths:{
+					 MyApp : '../js/MyApp' //声明文件的位置
+				  }
+			}); 
+		}
+		init();
+		//引入
+		Ext.require("MyApp.Teacher");
+		
+		//Ext.onReady()Extjs程序入口方法
+        Ext.onReady(function(){
+        	//一、测试ExtJS 中自定义类
+        	var Tom = new Person("Tom",23);
+        	Tom.Say("Hello !");
+        	//通过new 实例的方式，对象是没有get和set方法的.
+        	//Tom.setAge(30);
+        	//console.info("Tom is age : "+Tom.getAge());
+            
+        	//二、测试ExtJS 中类的继承
+            var Bill = new Developer("Bill",26);
+            Bill.Say("Hello !");//自动继承父类的属性和方法
+            Bill.Coding(" int  num = 0;");
+            
+            //三、测试ExtJS 中类的选项 - config
+            testWin.show();//窗口显示方法
+            
+            //通过Config配置，生成控制器
+            var Dog = Ext.create("Animal",{
+                Name : '狗狗',
+                Color : '红色'
+            });
+            Dog.Cry("哇哇哇哇...");
+            /*
+            * ExtJS 通过config完成初始化，并可生成访问器get、set方法，
+            * 我们可以通过这样的方式来访问对象的属性。
+            */
+            Dog.setColor('棕色');
+            console.log("Dog.getAge() : "+Dog.getColor());
+            
+            //四、测试ExtJS 中类的别名 - alias
+            var XiaoMing = Ext.create('Student',{
+            	Name : '小明',
+            	Age : 15
+            });
+            XiaoMing.SayHello();
+            
+          //五、测试ExtJS 中require用法，手动引入js文件
+          //使用别名Tcher创建对象
+          var MrZhang = Ext.create('Tcher',{
+        	  name : '张老师',
+        	  age : 35
+          });
+          MrZhang.sayHi();
+          console.dir(MrZhang);
+          
+          
+        });
+</script>
+
+
+</head>
+<body>
+<center><h1>ExtJS 4.2教程-03：使用Ext.define自定义类</h1></center>
+
+<h3>学习本课之前，请先了解JavaScript自定义类知识！！</h3>
+
+
+
+</body>
+</html>

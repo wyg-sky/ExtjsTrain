@@ -1,0 +1,144 @@
+浏览器控制台 console对象使用
+
+参考网址：http://www.open-open.com/lib/view/open1421131601390.html
+
+另一篇文章：Firebug控制台详解
+http://www.ruanyifeng.com/blog/2011/03/firebug_console_tutorial.html
+
+解释说明：调试JS代码时为什么要用console对象，而不用alert呢？
+你想想你用alert的时候是不是每次都要点确定代码才能往下执行，因为alert阻断线程运行，
+你不点击alert框的确定按钮下一个alert就不会出现；这样效率就大大降低了。
+循环一个数值用alert要点很多次才能执行完成，用console对象不会中断代码的执行，提高执行效率！
+
+一、显示信息的命令
+1、console.log("用于输出普通信息");   
+2、console.info("用于输出提示性信息");
+3、console.error("用于输出错误信息");
+4、console.warn("用于输出警示信息");
+5、console.debug("用于输出调试信息");
+
+二：占位符
+只支持字符（%s）、整数（%d或%i）、浮点数（%f）和对象（%o）四种
+1. 字符（%s）   console.log("%d年%d月%d日",2011,3,26);
+2. 整数（%d或%i）    console.log("年龄是%d",30);
+3. 浮点数（%f）  console.log("圆周率是%f",3.1415926);
+4. 对象（%o）可以用来查看一个对象内部情况 
+<script type="text/javaScript">
+                var dog = {};
+                dog.name = "大毛";
+                dog.color = "黄色";
+                console.log("%o", dog);
+</script>
+三、信息分组
+<script type="text/javaScript">
+console.group("第一组信息");
+　　　　console.log("第一组第一条:我的XX(http://www.jb51.net)");
+　　　　console.log("第一组第二条:xxx(http://jb51.net)");
+console.groupEnd();
+console.group("第二组信息");
+　　　　console.log("第二组第一条:程序爱好者QQ群： 12345678");
+　　　　console.log("第二组第二条:欢迎你加入");
+console.groupEnd();
+</script>
+
+四、查看对象的信息
+console.dir()可以显示一个对象所有的属性和方法。
+<script type="text/javaScript">
+        var person = {
+            name:"张三",
+            age:30,
+            idCard:"3124353458987234283",
+            address:"山东省济南市历下区",
+            say : function(){
+                return "大家好，这是我的讲话方法！";
+            }
+        };
+        console.dir(person);
+</script>
+
+五、显示某个节点的内容
+console.dirxml()用来显示网页的某个节点（node）所包含的html/xml代码。
+<table id="myTable">
+        <tr>
+            <td>A</td>
+        </tr>
+        <tr>
+            <td>BBB</td>
+        </tr>
+        <tr>
+            <td>111</td>
+            <td>333</td>
+            <td>222</td>
+        </tr>
+</table>
+<script type="text/javaScript">
+var myTable = document.getElementById('myTable');//先得到这个mytable节点
+console.dirxml(myTable);//输出这个节点
+</script>
+
+六、判断变量是否是真
+<script type="text/javaScript">
+　　var result = 1;//非0即为真;
+　　console.assert( result );//true
+　　var year = 2014;
+　　console.assert(year == 2018 );//不等 报错
+</script>
+
+七、统计某方法代码被执行的次数
+console.count("某方法体被执行的次数");
+<script type="text/javaScript">
+        function myFunction(){
+            String str = "方法体内部执行逻辑。。。。";
+            console.count("myFunction方法被执行的次数");
+        }
+        myFunction();
+        myFunction();
+        myFunction();
+</script>
+
+八、追踪函数的调用轨迹
+console.trace()用来追踪函数的调用轨迹。想知道函数是如何被调用的，在其中加入console.trace()方法就可以了
+<script type="text/javaScript">
+        //定义一个变量x 接受add3方法的返回值.
+        var x = add3(1,1);
+        
+　　function add(a,b){
+               console.trace();//函数是如何被调用的，在其中加入console.trace()方法就可以了
+　　　　return a+b;
+　　}
+　　function add3(a,b){
+                return add2(a,b);//调用add2方法
+        }
+　　function add2(a,b){
+                return add1(a,b);//调用add1方法
+        }
+　　function add1(a,b){
+                return add(a,b);//调用add方法
+        }
+</script>
+
+九、console.time()和console.timeEnd()，用来显示代码的运行时间。
+<script type="text/javaScript">
+　　console.time("控制台计时器一");
+　　for(var i=0;i<1000;i++){
+　　　　for(var j=0;j<1000;j++){}
+　　}
+　　console.timeEnd("控制台计时器一");
+</script>
+
+十、console.profile和console.profileEnd配合一起使用来查看CPU使用相关信息
+<script type="text/javaScript">
+function all(){
+    var array = new Array(100000);
+    for(var i=array.length - 1; i >= 0; i--){
+         array[i] = new Object();
+    }
+}
+
+console.profile("Array initialize");
+all();
+console.profileEnd("Array initialize");
+</script>
+
+十一、console.timeLine和console.timeLineEnd配合一起记录一段时间轴
+

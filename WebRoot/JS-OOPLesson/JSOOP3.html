@@ -1,0 +1,165 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>JavaScript面向对象编程（三）：非构造函数的继承</title>
+<script type="text/javaScript">
+/*
+ *  这个系列的第一部分介绍了"封装"，第二部分介绍了使用构造函数实现"继承"。
+ *  今天是最后一个部分，介绍不使用构造函数实现"继承"。
+ * 
+ */
+ 
+ /*
+ *  一、什么是"非构造函数"的继承？
+ *  比如，现在有一个对象，叫做"中国人"。
+ */
+ var Chinese ={
+		nation : '中国'
+};
+//还有一个对象叫医生
+var Doctor = {
+		career : "医生"
+};
+
+/**
+ * 请问怎样才能让"医生"去继承"中国人"，也就是说，我怎样才能生成一个"中国医生"的对象？
+ * 这里要注意，这两个对象都是普通对象，不是构造函数，无法使用构造函数方法实现"继承"。
+ **/
+
+ /**
+ *  二、object()方法
+ *  json格式的发明人Douglas Crockford，提出了一个object()函数，可以做到这一点。
+ * 这个object()函数，其实只做一件事，就是把子对象的prototype属性，指向父对象，从而使得子对象与父对象连在一起。
+ */
+ function object(o){
+	function F(){};
+	F.prototype = o;
+	return new F();
+}
+ //使用的时候，第一步先在父对象的基础上，生成子对象：
+ var Doctor2 = object(Chinese);
+ 
+ //然后，再加上子对象本身的属性：
+ Doctor2.career = "医生";
+ 
+ //这时，子对象已经继承了父对象的属性了。
+ console.info("查看子类继承父类之后的对象信息：");
+ console.log("Doctor2.nation："+Doctor2.nation);//中国
+ console.dir(Doctor2);
+ 
+ /*
+ *  三、浅拷贝
+ *  除了使用"prototype链"以外，还有另一种思路：把父对象的属性，全部拷贝给子对象，也能实现继承。
+ */
+ //下面这个函数，就是在做拷贝：
+ function extendCopy( Parent ){
+	 var Childer = {};
+	 for(var i in Parent){
+		 Childer[i] = Parent[i];
+	 }
+	 Childer.uber = Parent;
+	 return Childer;
+ }
+ 
+ //声明一个美国变量
+var American = {
+		 nation : "美国",
+		 address : ["洛杉矶","纽约","芝加哥","休士顿"],//数组对象
+		 color : {A : "白种人",B : "黑种人", C : "黄种人"}//普通对象
+ };
+
+ //使用浅拷贝，让商人继承美国的属性
+ var BusinessMan = extendCopy(American);
+ BusinessMan.career = "商人";
+//这时，子对象已经继承了父对象的属性了。
+console.info("使用浅拷贝方法之后子类已继承父类属性，查看BusinessMan对象信息：");
+console.log("BusinessMan.nation："+BusinessMan.nation);//美国
+console.dir(BusinessMan);
+
+console.info("下面更改子类BusinessMan对象信息中的address数组属性：添加一个'底特律'城市名称");
+BusinessMan.address.push('底特律');
+console.info("下面更改子类BusinessMan对象信息中的color对象：添加一个'D'其它种族人");
+BusinessMan.color.D="其它种族人";
+console.info("添加完成之后查看BusinessMan对象和American对象的address属性变化：");
+console.log("BusinessMan.address : "+ BusinessMan.address );
+console.log("American.address : "+ American.address );
+console.dir(BusinessMan);
+console.dir(American);
+
+/**
+ *  但是，这样的拷贝有一个问题。
+ *  那就是，如果父对象的属性等于数组或另一个对象：那么实际上，子对象获得的只是一个内存地址；
+ *                                                                                        而不是真正拷贝，因此存在父对象被篡改的可能。
+ *
+ *  请看，现在给American中的address属性，它的值是一个数组。
+ *  address : ["洛杉矶","纽约","芝加哥","休士顿"],//数组对象
+ *  通过浅拷贝方法extendCopy()函数，BusinessMan继承了American，BusinessMan中也有了这些属性。
+ *  var BusinessMan = extendCopy(American);
+ *  然后，我们为BusinessMan的"address"添加一个城市：
+ *  BusinessMan.address.push('底特律');
+ *
+ *
+ *  发生了什么事？American的"地址address"也被改掉了！
+ *  console.info(BusinessMan.address); //"洛杉矶","纽约","芝加哥","休士顿","底特律"
+ *  console.info(American.address); //"洛杉矶","纽约","芝加哥","休士顿","底特律"
+ *
+ *  所以，extendCopy()只是拷贝基本类型的数据，我们把这种拷贝叫做"浅拷贝"。
+ *  这是早期jQuery实现继承的方式。
+ *
+ */
+ 
+ 
+ /*
+ *  四、深拷贝
+ *  所谓"深拷贝"，就是能够实现真正意义上的数组和对象的拷贝。
+ *  它的实现并不难，只要递归调用"浅拷贝"就行了。
+ */
+ function deepCopy( p , c ){
+	 var c = c || {};
+	 for(var i in p){
+		 if(typeof p[i] === 'object'){
+			 c[i] = (p[i].constructor === Array) ? [] : {};
+			 deepCopy( p[i] , c[i] )
+		 }else{
+			 c[i] = p[i];
+		 }
+	 }
+	 return c ;
+ }
+ 
+//声明一个英国变量
+ var English = {
+          nation : "英国",
+          address : ["伦敦","利物浦","伯明翰","曼彻斯特"],//数组对象
+          color : {A : "白种人",B : "黑种人", C : "黄种人"}//普通对象
+  };
+  
+ //使用深拷贝，让足球运动员继承英国的属性
+ var FootballMan = deepCopy(English);
+ FootballMan.career = "足球运动员";
+//这时，子对象已经继承了父对象的属性了。
+console.info("使用深拷贝方法之后子类已继承父类属性，查看FootballMan对象信息：");
+console.log("FootballMan.nation："+FootballMan.nation);//英国
+console.dir(FootballMan);
+
+console.info("下面更改子类FootballMan对象信息中的address数组属性：添加一个'谢菲尔德'城市名称");
+FootballMan.address.push('谢菲尔德');
+console.info("下面更改子类FootballMan对象信息中的color对象：添加一个'D'其它种族人");
+FootballMan.color.D="其它种族人";
+console.info("添加完成之后查看FootballMan对象和English对象的address属性变化：");
+console.log("FootballMan.address : "+ FootballMan.address );
+console.log("English.address : "+ English.address );
+//使用深拷贝之后。这时，父对象就不会受到影响了。
+console.dir(FootballMan);
+console.dir(English);
+ 
+</script>
+</head>
+<body>
+<h3>JavaScript面向对象编程（三）：非构造函数的继承</h3>
+<h1><a href="http://www.ruanyifeng.com/blog/2010/05/object-oriented_javascript_inheritance_continued.html">参考地址链接.</a></h1>
+
+请打开控制台，查看console对象的输出情况！！！
+</body>
+</html>

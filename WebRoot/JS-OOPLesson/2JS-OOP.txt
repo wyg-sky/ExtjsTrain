@@ -1,0 +1,52 @@
+JavaScript OOP 概念理解
+
+参考网址：
+
+开篇注意：JavaScript编程风格
+（做什么事都要注意格式，编程风格，可以看出一个人的严谨和素养！）
+http://www.ruanyifeng.com/blog/2012/04/javascript_programming_style.html
+
+1.JavaScript的this用法
+http://www.ruanyifeng.com/blog/2010/04/using_this_keyword_in_javascript.html
+
+1.1 JavaScript  apply()与 call() 使用详解 
+①http://www.360doc.com/content/13/0807/19/13328522_305431575.shtml
+②http://uule.iteye.com/blog/1158829
+③也可查看项目中：3JavaScript中的apply()与call()使用详解.txt 文件中的内容。
+
+2.JavaScript继承机制的设计思想
+http://www.ruanyifeng.com/blog/2011/06/designing_ideas_of_inheritance_mechanism_in_javascript.html
+
+
+3.JavaScript 面向对象编程（一）：封装
+http://www.ruanyifeng.com/blog/2010/05/object-oriented_javascript_encapsulation.html
+
+4.JavaScript面向对象编程（二）：构造函数的继承
+http://www.ruanyifeng.com/blog/2010/05/object-oriented_javascript_inheritance.html
+
+5.JavaScript面向对象编程（三）：非构造函数的继承
+http://www.ruanyifeng.com/blog/2010/05/object-oriented_javascript_inheritance_continued.html
+
+6.JavaScript定义类（class）的三种方法
+http://www.ruanyifeng.com/blog/2012/07/three_ways_to_define_a_javascript_class.html
+
+7.如何判断JavaScript对象是否存在
+http://www.ruanyifeng.com/blog/2011/05/how_to_judge_the_existence_of_a_global_object_in_javascript.html
+
+8.undefined与null的区别
+http://www.ruanyifeng.com/blog/2014/03/undefined-vs-null.html
+
+9.学习JavaScript闭包（Closure）
+http://www.ruanyifeng.com/blog/2009/08/learning_javascript_closures.html
+
+10.JavaScript异步编程的4种方法
+http://www.ruanyifeng.com/blog/2012/12/asynchronous%EF%BC%BFjavascript.html
+
+11.文件上传的渐进式增强
+http://www.ruanyifeng.com/blog/2012/08/file_upload.html
+
+12.用JavaScript获取页面元素的位置
+http://www.ruanyifeng.com/blog/2009/09/find_element_s_position_using_javascript.html
+
+13.快速排序（QuickSort）的JavaScript实现
+http://www.ruanyifeng.com/blog/2011/04/quicksort_in_javascript.html
