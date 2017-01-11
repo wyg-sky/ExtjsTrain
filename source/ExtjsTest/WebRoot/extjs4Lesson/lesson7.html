@@ -1,0 +1,209 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>ExtJS 4.2教程-07：Ext.Direct</title>
+<!-- 在使用ExtJS的时候，我们必须要引用脚本和样式两部分。 脚本的内容可以通过bootstrap.js来自动添加 -->
+<script src="../js/extjs 4.2.1/bootstrap.js"></script>
+<!-- 引入汉语的本地化文件 -->
+<script src="../js/extjs 4.2.1/locale/ext-lang-zh_CN.js"></script>
+<script type="text/javascript" src="../test/testApi.js"></script>
+<script type="text/javascript" src="../demo/demoApi.js"></script>
+<!-- neptune 是在4.2中新增的样式，看上去比较现代一些，但不支持IE6 -->
+<link href="../js/extjs 4.2.1/resources/css/ext-all-neptune.css" rel="stylesheet" />
+<style type="text/css">
+.pollingDiv{
+    height: 100%;
+    color:red;
+    background-color: #CCCCCC;
+    display: block;
+}
+</style>
+<script type="text/javascript">
+Ext.onReady(function(){
+	Ext.Direct.addProvider(
+	           Ext.test.REMOTING_API,
+	           Ext.demo.REMOTING_API
+	    );
+
+	var text = new Ext.form.TextField({//输入参数容器
+	    fieldLabel:"输入内容",
+	    width:230
+	});
+
+	var out1 = new Ext.form.DisplayField({ //输出内容容器
+	        cls: 'x-form-text',
+	        fieldLabel:"输出内容",
+	        width:230
+	});
+	var out2 = new Ext.form.DisplayField({ //输出内容容器
+        cls: 'x-form-text',
+        fieldLabel:"输出内容",
+        width:230
+	});
+
+	var btn =  new Ext.Button({ //触发调用事件
+	    text:"调用Java方法",
+	    handler:function(){
+	        var value = text.getValue();
+	        TestAction.doEcho(value,function(result ,e){  //这里是调用方法
+	           var t = e.getTransaction();
+	           var content = Ext.String.format('成功调用{0}.{1} ，返回数据为:{2}',t.action,t.method,result);
+	           out1.setValue(content);
+	        });
+	        var user = {
+                    firstName : "尼古拉斯",
+                      lastName : "赵四",
+                      age : 18 
+             }
+	        TestAction.showDetails(user,function(result ,e){  //这里是调用方法
+	               var t = e.getTransaction();
+	               var content = Ext.String.format('成功调用{0}.{1} ，返回数据为:{2}',t.action,t.method,result);
+	               out2.setValue(content);
+            });
+	        
+	        TestAction.showListDetails("return JSONText Test!", new Array("Saab","Volvo","BMW"),666,
+	        		function(result,e){
+	        	           var backObj = e.getTransaction();
+	        	           console.log("result：");
+	        	           console.log(result);
+	        	           var content = Ext.String.format('成功调用{0}.{1}成功!',backObj.action,backObj.method);
+	        	           console.log(content);
+	        	           //var json = result ? Ext.decode(result) : {};
+	        	           var json = result;
+	        	           console.log(json);
+	        	           for(var i=0; i<json.length;i++){
+	        	        	   console.log("firstName : "+json[i].firstName);
+	        	        	   console.log("lastName : "+json[i].lastName);
+	        	        	   console.log("age : "+json[i].age);
+	        	           }
+	        });
+	        
+	    }
+	});
+
+	var panel = new Ext.form.FormPanel({
+	    //title:"简单Ext.Direct例子",
+	    //collapsible: true,  //可折叠
+	    width:400,
+	    autoScroll: true,   //自动创建滚动条
+	    defaults: {
+	        anchor: '90%',
+	    },
+	    fieldDefaults: {
+	        labelWidth: 80,
+	        labelAlign: "left",
+	        flex: 1,
+	        margin: 5
+	    },
+	    items:[text,out1,out2],
+	    bbar:[btn]
+	});
+	
+	 var  testWin = Ext.create("Ext.window.Window",{
+        title : "窗口测试",
+        width : 400,
+        height : 200,
+        items:[panel]
+    }); 
+	 testWin.show();
+	 
+	 //创建了一个轮询方法
+	 var polling = Ext.create('Ext.direct.PollingProvider', {
+		    url: Ext.demo.POLLING_URLS.message,
+		    type: 'polling',
+		    interval: 5000,
+		    baseParams:{
+		    	data:'Polling'
+		    },
+		    listeners: {
+		    	/*
+		    	* Parameters
+		    	*    1.provider : Ext.direct.Provider 此Provider对象.
+		    	*    2.e : Ext.direct.Event  发生的事件类型. 可以通过e.getData()方法获取返回的原数据.Object类型。
+		    	*    event包含下面这些属性
+		    	*             data - 服务器方法的返回值 e.data
+		    	*             name - 事件名称  e.name
+		    	*             status - true方法调用成功，false方法调用失败  e.status
+		    	*             type - 'event' 或 'exception' 如果调用失败  e.type
+		    	*    3.eOpts : Object  The options object passed to Ext.util.Observable.addListener.
+		    	**/
+		        data: function (provider, e, eOpts) {
+		        	if(e.status){
+		        		console.info(e.getData());
+	                    console.info(e.data);
+	                    var backMsg = e.data+'<br>';
+	                    var divP = Ext.get("PollingProvider");
+	                    console.info(divP);
+	                    divP.el.dom.innerHTML += backMsg;
+		        	}
+		        }
+		    },
+		    id: 'GetMessagePolling'
+		});
+		//启动连接
+		polling.connect();
+		/* 使用此方法可以单独设置polling间隔时间 
+		  var dp = Ext.Direct.getProvider('GetMessagePolling'); 
+		  dp.disconnect(); 
+		  dp.connect.defer(2000, dp); 
+		  Ext.direct.Manager.getProvider('myPollingProvider')将会返回服务提供者实例
+		*/ 
+		//关闭连接
+		//polling.disconnect();
+		  
+	   /**
+	    *   还可以如下方法调用：
+	    *
+		*   var pollProvider = new Ext.direct.PollingProvider({  
+	    *       type:'polling',  
+	    *       url: Ext.demo.POLLING_URLS.message  
+	    *     });  
+		*           
+	    *     pollProvider.addListener('data', callback, scope);
+		      通过监听data事件，传入回调函数再回调函数中处理，注意作用域。
+	    */
+	      var pollProvider2 = Ext.create('Ext.direct.PollingProvider', {
+	            url: Ext.demo.POLLING_URLS.message2,
+	            type: 'polling',
+	            interval: 5000,
+	            baseParams:{
+	                data:'Polling'
+	            },
+	            id: 'GetMessage'
+	        });
+	      pollProvider2.addListener('data', function(provider, e, eOpts){
+	            if(e.status){
+	                var backMsg = e.data+'<br>';
+	                var divP = Ext.get("PollingProvider");
+	                divP.el.dom.innerHTML += backMsg;
+	            }
+	        }, this);
+	      pollProvider2.connect();
+	
+});
+
+</script>
+
+</head>
+<body>
+<h1 align="center">ExtJS 4.2教程-07：Ext.Direct</h1>
+<p>
+Ext.Direct 提供了一种使用Javascript 调用服务器端方法的机制，它与服务器端技术无关，因此可以在php、java、.net 等众多平台中使用该技术。
+</p><br>
+<p>
+我们本节中将以RemotingProvider 为例进行讲解。
+</p><br>
+对于RemotingProvider 的执行流程，大致上是：<br>
+1.定义API，并将API添加到Ext.direct.Manager，然后我们将通过调用API来执行远程请求。<br>
+2.请求过程中，ExtJS 将创建一个Ajax 请求，将Remoting有关的数据发送到服务器的Remoter页面，<br>
+3.Remoter将对其进行分流，根据action（对应类名）、method（对应方法名）调用不同的方法，完成执行调用后，将封装好的结果返回给客户端。
+
+<br>
+
+<div id="PollingProvider" class="pollingDiv">
+轮询访问后台数据显示区：<br/>
+</div>
+
+</body>
+</html>

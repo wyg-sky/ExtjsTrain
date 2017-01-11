@@ -19,4 +19,98 @@
     <servlet-name>TestJson</servlet-name>
     <url-pattern>/getTestJson.do</url-pattern>
   </servlet-mapping>
+      <!--
+                开始_配置DierctJNgine的Servlet引擎
+      -->
+    <servlet>
+    	<!--com.softwarementors.extjs.djn.servlet.DirectJNgineServlet即为DierctJNgine的Servlet引擎。-->
+        <servlet-name>DjnServlet</servlet-name>
+        <servlet-class>
+            com.softwarementors.extjs.djn.servlet.DirectJNgineServlet
+        </servlet-class>
+        <!-- 初始化参数debug设置为true，DirectJNgine会为我们动态生成-dubug.js文件 -->
+        <init-param>
+            <param-name>debug</param-name>
+            <param-value>true</param-value>
+        </init-param>
+        <!-- providersUrl 供应者，提供者的路径位置 (具体代码实现和干活的控制文件位置。)-->
+        <init-param>
+            <param-name>providersUrl</param-name>
+            <param-value>djn/directprovider</param-value>
+        </init-param>
+        <!--设置响应的java后台文件配置-->
+        <!--
+            apis :可以理解把本模块应用程序起个别名，以便组织模块（个人理解）。
+            DirectJNgine引擎会根据此处配置的别名模块自动生成对应的文件夹和对应的js文件。
+            本例子中有两个模块名test和demo，如果有多个用逗号分隔即可。
+         -->
+        <init-param>
+            <param-name>apis</param-name>
+            <param-value>
+            	test,
+            	demo
+            </param-value>
+        </init-param>
+        <!--
+            键 *.apiFile：此处的*，就是上面apis,里面声明的某一个模块别名，比如test.apiFile、demo.apiFile
+            可以理解为-> %apiName%=test（test.apiFile）本例中%apiName%=test（test.apiFile）即在apis中定义的别名.
+            ①test.apiFile 用于定义DirectJNgine自动生成的js代码存放位置。在本例存放到test/testApi.js中;
+            ②这个文件【服务器端】会自动生成，注意这里的生成【路径相对于webapp的根目录】
+                ->即在服务器Tomcat部署目录webapp下生成，在开发阶段工作目录下是看不到的！！！！
+            ③%apiName%.apiFile后面的“.apiFile”为固定模式，我们只需要根据项目配置%apiName%即可；
+        -->
+        <init-param>
+          <param-name>demo.apiFile</param-name>
+          <param-value>demo/demoApi.js</param-value>
+        </init-param>
+        <init-param>
+             <param-name>test.apiFile</param-name>
+             <param-value>test/testApi.js</param-value>
+        </init-param>
+        <!--
+            键 *.aipNamespace : 用于定义自动生成js代码的命名空间.
+            %apiName%.aipNamespace：用于定义自动生成js代码的命名空间。
+            同上我们只需要替换%apiName%为test即可。
+        -->
+        <init-param>
+          <param-name>demo.apiNamespace</param-name>
+          <param-value>Ext.demo</param-value>
+        </init-param>
+        <init-param>
+             <param-name>test.apiNamespace</param-name>
+             <param-value>Ext.test</param-value>
+        </init-param>
+        <!--
+            键 demo.classes : 为声明模块所依赖的Java后台类，它的值可以有多个类，用逗号分隔即可
+            %apiName%.classes：为本模块依赖的后端java类，它的值可以有多个类，用逗号分隔即可。
+            本例中就是com.ext.direct.test.TestAction，
+            这样前台客户端js就可以通过引入后台自动生成的js文件，调用TestAction中所有使用@DirectMethod注解的方法。
+        -->
+        <init-param>
+          <param-name>demo.classes</param-name>
+          <param-value>
+              com.ext.direct.demo.demoAction,
+              com.ext.direct.demo.DirectAPIDemo
+          </param-value>
+        </init-param>
+        <init-param>
+            <param-name>test.classes</param-name>
+            <param-value>com.ext.direct.test.TestAction</param-value>
+        </init-param>
+        <!-- load-on-startup： 标记容器是否在启动的时候就加载这个servlet
+                 容器在应用启动时 servlet的加载顺序，正数的值越小，启动该servlet的优先级越高；
+                 当值为0或者大于0时，表示容器在应用启动时就加载这个servlet；
+                 当是一个负数时或者没有指定时，则指示容器在该servlet被选择时[被调用时]才加载。
+        -->
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    
+    <!-- Servlet url-pattern必须使用“/*”结尾，官方推荐使用/djn/directprovider/* -->
+    <servlet-mapping>
+           <servlet-name>DjnServlet</servlet-name>
+           <url-pattern>/djn/directprovider/*</url-pattern>
+    </servlet-mapping>
+      <!--
+                结束_配置DierctJNgine的Servlet引擎
+      -->
 </web-app>
