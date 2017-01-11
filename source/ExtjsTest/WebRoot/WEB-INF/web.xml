@@ -110,6 +110,15 @@
            <servlet-name>DjnServlet</servlet-name>
            <url-pattern>/djn/directprovider/*</url-pattern>
     </servlet-mapping>
+    
+    <!--
+            通过以上配置服务器端Java类的方法就暴露给客户端JavaScript了.
+            下面说下如何调用这些方法：
+                1.发布项目重启web服务；
+                2.可以在服务器Tomcat->webApp文件夹下->项目文件夹->WebRoot查看到test文件夹
+                   test文件夹下多了三个文件分别是：testApi.js、testApi-debug.js和testApi-min.js。
+               3.前台js文件，将testApi.js引入就可以调用JAVA后台的方法了。(具体实现看前台JS实例!)
+    -->
       <!--
                 结束_配置DierctJNgine的Servlet引擎
       -->

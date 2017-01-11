@@ -2,13 +2,16 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>ExtJS 4.2教程-07：Ext.Direct</title>
+<title>ExtJS 4.2教程-07：Ext.Direct调用服务端后台方法</title>
 <!-- 在使用ExtJS的时候，我们必须要引用脚本和样式两部分。 脚本的内容可以通过bootstrap.js来自动添加 -->
 <script src="../js/extjs 4.2.1/bootstrap.js"></script>
 <!-- 引入汉语的本地化文件 -->
 <script src="../js/extjs 4.2.1/locale/ext-lang-zh_CN.js"></script>
+
+<!-- 【★第一步：先引入js文件。此处引入Java后台通过DierctJNgine的引擎自动生成的模块*Api.js ★】-->
 <script type="text/javascript" src="../test/testApi.js"></script>
 <script type="text/javascript" src="../demo/demoApi.js"></script>
+
 <!-- neptune 是在4.2中新增的样式，看上去比较现代一些，但不支持IE6 -->
 <link href="../js/extjs 4.2.1/resources/css/ext-all-neptune.css" rel="stylesheet" />
 <style type="text/css">
@@ -21,6 +24,12 @@
 </style>
 <script type="text/javascript">
 Ext.onReady(function(){
+	
+	/*
+	* 第二步：通过Ext.Drect注册服务器端方法
+	* 为使Extjs能够调用java方法，需要注册一个远程供应器。
+	* 注册的是：引入的Java后台自动生成的js文件,具体注册名请详见生成好的*Api.js文件；如：testApi.js。
+	*/
 	Ext.Direct.addProvider(
 	           Ext.test.REMOTING_API,
 	           Ext.demo.REMOTING_API
@@ -46,6 +55,14 @@ Ext.onReady(function(){
 	    text:"调用Java方法",
 	    handler:function(){
 	        var value = text.getValue();
+	        
+	        /*
+	        * 第三步：调用已经注册好的服务端方法。
+	        * 调用格式：后台类名.方法名(参数1,参数2,参数3,...,回调方法接受返回值fucntion(result,e){
+	        *	                        result : 接受的后台方法返回值。
+	        *                          e : 事件状态 和 事件信息。
+	        *	                  })
+	        */
 	        TestAction.doEcho(value,function(result ,e){  //这里是调用方法
 	           var t = e.getTransaction();
 	           var content = Ext.String.format('成功调用{0}.{1} ，返回数据为:{2}',t.action,t.method,result);
@@ -108,17 +125,22 @@ Ext.onReady(function(){
     }); 
 	 testWin.show();
 	 
-	 //创建了一个轮询方法
+	 /*
+      * 第四步：轮询方法的创建与调用。
+      */
+	 
+	 //四.①创建一个轮询方法   类型为：Ext.direct.PollingProvider
 	 var polling = Ext.create('Ext.direct.PollingProvider', {
-		    url: Ext.demo.POLLING_URLS.message,
-		    type: 'polling',
-		    interval: 5000,
-		    baseParams:{
+		    id: 'GetMessagePolling',//指定该轮询的唯一ID
+		    url: Ext.demo.POLLING_URLS.message,//要请求的URL,demo中轮询url里面的message事件方法(java后台注册的事件名称)
+		    type: 'polling',//类型为轮询类型
+		    interval: 5000,//时间间隔：每5秒执行一次请求，请求上面的url.
+		    baseParams:{ //请求参数
 		    	data:'Polling'
 		    },
-		    listeners: {
+		    listeners: {//监听data事件，获取后台传回来的数据.
 		    	/*
-		    	* Parameters
+		    	* data 返回方法中的 Parameters
 		    	*    1.provider : Ext.direct.Provider 此Provider对象.
 		    	*    2.e : Ext.direct.Event  发生的事件类型. 可以通过e.getData()方法获取返回的原数据.Object类型。
 		    	*    event包含下面这些属性
@@ -133,24 +155,29 @@ Ext.onReady(function(){
 		        		console.info(e.getData());
 	                    console.info(e.data);
 	                    var backMsg = e.data+'<br>';
+	                    //Ext.get(id),相当于document.getElementById(id);获取指定id的组件。
 	                    var divP = Ext.get("PollingProvider");
 	                    console.info(divP);
 	                    divP.el.dom.innerHTML += backMsg;
 		        	}
 		        }
-		    },
-		    id: 'GetMessagePolling'
+		    }
 		});
 		//启动连接
 		polling.connect();
-		/* 使用此方法可以单独设置polling间隔时间 
-		  var dp = Ext.Direct.getProvider('GetMessagePolling'); 
-		  dp.disconnect(); 
-		  dp.connect.defer(2000, dp); 
-		  Ext.direct.Manager.getProvider('myPollingProvider')将会返回服务提供者实例
-		*/ 
 		//关闭连接
-		//polling.disconnect();
+        //polling.disconnect();
+		
+		/* 
+		  //获取指定ID的轮询类(即轮询方法)
+		  var dp = Ext.Direct.getProvider('GetMessagePolling'); 
+		  //断开访问链接
+		  dp.disconnect(); 
+		  //使用此方法可以单独设置polling间隔时间 
+		  dp.connect.defer(2000, dp); 
+		  //将会返回服务提供者实例
+		  Ext.direct.Manager.getProvider('myPollingProvider');
+		*/ 
 		  
 	   /**
 	    *   还可以如下方法调用：
@@ -164,22 +191,23 @@ Ext.onReady(function(){
 		      通过监听data事件，传入回调函数再回调函数中处理，注意作用域。
 	    */
 	      var pollProvider2 = Ext.create('Ext.direct.PollingProvider', {
-	            url: Ext.demo.POLLING_URLS.message2,
-	            type: 'polling',
-	            interval: 5000,
-	            baseParams:{
+	            url: Ext.demo.POLLING_URLS.message2,//要访问的轮询url
+	            type: 'polling',//轮询类型
+	            interval: 5000,//重复间隔时间
+	            baseParams:{//请求参数
 	                data:'Polling'
 	            },
-	            id: 'GetMessage'
+	            id: 'GetMessage'//指定id
 	        });
+		 //给pollProvider2轮询方法添加data监听，回调方法接受返回参数。
 	      pollProvider2.addListener('data', function(provider, e, eOpts){
-	            if(e.status){
-	                var backMsg = e.data+'<br>';
+	            if(e.status){//执行状态false OR true
+	                var backMsg = e.data+'<br>';//e.data返回参数
 	                var divP = Ext.get("PollingProvider");
 	                divP.el.dom.innerHTML += backMsg;
 	            }
 	        }, this);
-	      pollProvider2.connect();
+	      pollProvider2.connect();//执行链接，表示正式启动。
 	
 });
 
@@ -202,7 +230,7 @@ Ext.Direct 提供了一种使用Javascript 调用服务器端方法的机制，�
 <br>
 
 <div id="PollingProvider" class="pollingDiv">
-轮询访问后台数据显示区：<br/>
+        轮询访问后台数据显示区：<br/>
 </div>
 
 </body>
