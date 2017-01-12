@@ -2,9 +2,459 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>Insert title here</title>
+<title>ExtJS 4.2教程-08：布局系统详解</title>
+<!-- 在使用ExtJS的时候，我们必须要引用脚本和样式两部分。 脚本的内容可以通过bootstrap.js来自动添加 -->
+<script src="../js/extjs 4.2.1/bootstrap.js"></script>
+<!-- 引入汉语的本地化文件 -->
+<script src="../js/extjs 4.2.1/locale/ext-lang-zh_CN.js"></script>
+<!-- neptune 是在4.2中新增的样式，看上去比较现代一些，但不支持IE6 -->
+<link href="../js/extjs 4.2.1/resources/css/ext-all-neptune.css" rel="stylesheet" />
+
+<script type="text/javascript">
+
+ Ext.onReady(function(){
+	 
+	 /**
+	  *  一、Auto Layout 是ExtJS 容器的默认布局
+	  *          当我们定义一个panel的时候，如果没有指定panel的布局，
+	  *          那么它就会使用Auto Layout来组织子元素。 
+	  *          Auto Layout 本身不包含任何特殊的布局功能，它只是提供了一种调用子元素布局系统的通道。
+	  */
+	 
+	 //俩种创建方式，1.直接new对象.
+	   var p = new Ext.Panel({
+	        title: 'My Panel',//标题
+	        collapsible:true,//右上角上的那个收缩按钮，设为false则不显示
+	        renderTo: 'container',//这个panel显示在html中id为container的层中
+	        width:400,
+	        height:200,
+	        style : 'margin:10px 5px 15px 20px;',
+	        html: "<p>我是内容，我包含的html可以被执行！</p>"//panel主体中的内容，可以执行html代码
+	    });
+	   //俩种创建方式，2.通过Ext.create("className",{configuration items})创建对象
+	   var panel = Ext.create("Ext.panel.Panel", {
+		    title: "Auto Layout",//标题
+		    collapsible:true,//右上角上的那个收缩按钮，设为false则不显示
+            renderTo: "container", //这个panel显示在html中id为container的层中
+		    width: 500,
+		    height: 400,
+		    style : 'margin-top:10px;',
+		    html: "<p>我是主Panel，我包含的html可以被执行！</p>",//panel主体中的内容，可以执行html代码
+		    items: [
+                //items元素，在这个panel中的子元素，子元素还可以是这种嵌套类型的panel对象.
+		        { xtype: "panel", title: "第一个子Panel",html:"第一个子Panel", width: 200, height: 100},
+		        { xtype: "panel", title: "第二个子Panel", html:"第二个子Panel", width: 150, height: 100 },
+		        { xtype: "textfield", width: 300, fieldLabel: "请输入用户名" }
+		    ]
+		});
+	   
+	   /**
+	   *   二、Anchor布局将使组件固定于父容器的某一个位置，使用anchor布局的子组件尺寸相对于容器的尺寸，
+	   *   即父容器容器的大小发生变化时，使用anchor布局的组件会根据规定的规则重新渲染位置和大小。
+	   *
+	   *   AnchorLayout布局没有任何的直接配置选项（继承的除外），然而在使用AnchorLayout布局时，
+	   *   其子组件都有一个anchor属性，用来配置此子组件在父容器中所处的位置。
+	   *
+	   *   Anchor属性为一组字符串，可以使用百分比或者是-数字来表示。配置字符串使用空格隔开，例如：
+	   *
+	   *    1. anchor:'75% 25%'，表示宽度为父容器的75%，高度为父容器的25%
+	   *    2. anchor:'-295 -300'，表示组件相对于父容器右边距为295，相对于父容器的底部位300
+	   *    3. anchor:'-250 10%'，混合模式，表示组件党对于如容器右边为250，高度为父容器的10%
+	   */
+	   var panel = Ext.create("Ext.panel.Panel", {
+		    width: 500,
+		    height: 400,
+		    title: "Anchor布局",
+		    layout: "anchor",
+		    //x: 60,
+		    //y: 80,
+		    style : 'margin-top:10px;',
+		    renderTo: "container",
+		    items: [
+		        { xtype: 'panel', title: '75% Width and 25% Height', html:'占父级面板宽度的75%和高度的25%',anchor: '75% 25%' },
+		        { xtype: 'panel', title: 'Offset -300 Width & -200 Height', html:'距离父级面板右边300和底部200', anchor: '-295 -300' },
+		        { xtype: 'panel', title: 'Mixed Offset and Percent',  html:'混合模式，距离父级面板右边250和站父级面高度的20%',anchor: '-250 20%' }
+		    ]
+		});   
+	    
+	   /*
+	   *   三、Absolute Layout 继承自 Anchor Layout，并增加了X/Y配置选项对子组件进行定位，
+	   *   Absolute布局的目的是为了扩展布局的属性，使得布局更容易使用。
+	   */
+	   Ext.create('Ext.form.Panel', {
+		    title: 'Absolute Layout',
+		    width: 400,
+		    height: 275,
+		    style : 'margin-top:10px;',
+		    //x: 70,
+            //y: 90,
+		    layout: 'absolute',
+		    url: 'save-form.php',//表单提交url地址
+		    defaultType: 'textfield',//默认类型，子元素的默认类型为textfield文本字段框
+		    //x，y表示在父面板中的位置.
+		    items: [
+		        { x: 10, y: 10, xtype: 'label', text: 'Send To:' },//xtype: 'label' 该子元素特别设置类型为：标签类型
+		        { x: 80, y: 10, name: 'to', anchor: '90%' },//默认类型
+		        { x: 10, y: 40, xtype: 'label', text: 'Subject:' },//xtype: 'label' 该子元素特别设置类型为：标签类型
+		        { x: 80, y: 40, name: 'subject', anchor: '90%' },//默认类型
+		        { x: 0, y: 80, xtype: 'textareafield', name: 'msg', anchor: '100% 100%' }//xtype: 'textareafield'该子元素特别设置类型为：大文本框类型
+		    ],
+		    renderTo: 'container'
+		});     
+	   
+	   /*
+	   *   四、Column 布局用来创建一个多列的布局格式，列宽度可以使用像素值或百分比。
+	   *   Column布局支持一个columnWidth属性，在布局过程中使用columnWidth指定每个面板的宽度的百分比他们的和加起来为1。
+	   *   columnWidth和width可混合使用，这个时候系统将减去width占用的宽度，然后再根据百分比计算列的宽度。
+	   *   另外，如果任何子面板没有指定columnWidth值，那么它将占满剩余的空间。 
+	   */
+	   // 所有列都是百分比，他们的和加起来为1
+	   Ext.create('Ext.panel.Panel', {
+	       title: 'Column Layout',
+	       width: 450,
+	       height: 250,
+	       style : 'margin-top:10px;',
+	       layout: 'column',
+	       items: [{
+	           title: 'Column 1',
+	           columnWidth: 0.25
+	       }, {
+	           title: 'Column 2',
+	           columnWidth: 0.55
+	       }, {
+	           title: 'Column 3',
+	           columnWidth: 0.20
+	       }],
+	       renderTo: "container"
+	   });
+
+	   // width和columnWidth混合使用
+	   Ext.create('Ext.Panel', {
+	       title: 'Column Layout - Mixed',
+	       width: 450,
+	       height: 250,
+	       style : 'margin-top:10px;',
+	       layout: 'column',
+	       items: [{
+	           title: 'Column 1',
+	           width: 120
+	       }, {
+	           title: 'Column 2',
+	           columnWidth: 0.7
+	       }, {
+	           title: 'Column 3',
+	           columnWidth: 0.3
+	       }],
+	       renderTo: "container"
+	   });
+	   /*
+	   *   五、Border 布局将界面分为上下左右中五个区域，: 上-北、下-南、左-西、右-东、中-中
+	   *   分别用 north、south、west、east、center来表示，它的每个子项用region指定元素的位置。
+	   *   部门平台就是用的这个部门！！！！
+	   */
+	   var panel = Ext.create("Ext.panel.Panel", {
+		    width: 700,
+		    height: 400,
+		    style : 'margin:10px 5px 15px 20px;',
+		    title: 'Border Layout布局测试',
+		    layout: 'border',
+		    items: [{
+                title: 'North Region (顶部)-上-北',
+                region: 'north',     // 所在的位置
+                xtype: 'panel',
+                height: 80
+            },{
+		        title: 'South Region (可调整大小页尾)-下-南',
+		        region: 'south',     // 所在的位置
+		        xtype: 'panel',
+		        height: 80,
+		        split: true,         // 允许调整大小
+		        margins: '0 5 5 5'
+		    }, {
+		        title: 'West Region (可折叠/展开)-左-西',
+		        region: 'west',
+		        xtype: 'panel',
+		        margins: '5 0 0 5',
+		        width: 200,
+		        collapsible: true,   // 可折叠/展开
+		        id: 'west-region-container',
+		        layout: 'fit'
+		    }, {
+                title: 'West Region (可折叠/展开)-右-东',
+                region: 'east',
+                xtype: 'panel',
+                margins: '5 0 0 5',
+                width: 200,
+                collapsible: true,   // 可折叠/展开
+                id: 'east-region-container',
+                layout: 'fit'
+            }, {
+		        title: 'Center Region (必须)-中间',
+		        region: 'center',     // 必须指定中间区域
+		        xtype: 'panel',
+		        layout: 'fit',
+		        margins: '5 5 0 0'
+		    }],
+		    renderTo: "container"
+		});
+	   
+	   /*
+	   *   六、Accordion Layout 是将其子元素以手风琴的效果显示。
+	   *   它的子元素必须是panel，或者panel的子类。
+	   */
+	   var panel = Ext.create("Ext.panel.Panel", {
+		    title: "Accordion Layout",
+		    width: 300,
+		    height: 300,
+		    style : 'margin-top:10px;',
+		    defaults: {
+		        // 应用到所有子panel
+		        bodyStyle: 'padding:15px'
+		    },
+		    layout: {
+		        // 布局配置
+		        type: 'accordion',
+		        titleCollapse: false,
+		        animate: true,
+		        activeOnTop: true
+		    },
+		    items: [{
+		        title: 'Panel 1',
+		        html: 'Panel content!'
+		    }, {
+		        title: 'Panel 2',
+		        html: 'Panel content!'
+		    }, {
+		        title: 'Panel 3',
+		        html: 'Panel content!'
+		    }],
+		    renderTo: "container"
+		});
+	   
+	   /*
+	   *   七、Card 布局是一种向导试的布局方式，它在显示的时候，本身是没有上一步、下一步按钮的，
+	   *   但提供了上一步、下一步的操作方法，我们需要在界面中添加导航按钮来配合实际的业务需要。
+	   */
+	   var navigate = function (panel, direction) {
+		    var layout = panel.getLayout();
+		    layout[direction]();
+		    Ext.getCmp('move-prev').setDisabled(!layout.getPrev());
+		    Ext.getCmp('move-next').setDisabled(!layout.getNext());
+		};
+
+		var panel = Ext.create('Ext.panel.Panel', {
+		    title:'示例向导',
+		    //x: 50,
+		    //y: 50,
+		    width: 300,
+		    height: 200,
+		    style : 'margin-top:10px;',
+		    layout: 'card',
+		    bodyStyle: 'padding:15px',
+		    defaults: {
+		        border: false
+		    },
+		    bbar: [
+		        {
+		            id: 'move-prev',
+		            text: '上一步',
+		            handler: function (btn) {
+		                navigate(btn.up("panel"), "prev");
+		            },
+		            disabled: true
+		        },
+		        '->',
+		        {
+		            id: 'move-next',
+		            text: '下一步',
+		            handler: function (btn) {
+		                navigate(btn.up("panel"), "next");
+		            }
+		        }
+		    ],
+		    items: [{
+		        id: 'card-0',
+		        html: '<p>第一步</p>'
+		    }, {
+		        id: 'card-1',
+		        html: '<p>第二步</p>'
+		    }, {
+		        id: 'card-2',
+		        html: '<p>第三步</p>'
+		    }],
+		    renderTo: "container"
+		});
+		
+		/*
+		*     七、Fit Layout 是很常用的一种布局，在Fit布局中，子元素将自动填满整个父容器。
+		*     在Fit 布局下，对其子元素设置宽度是无效的。如果在Fit 布局中放置了多个组件，则只会显示第一个子元素。
+		*     典型的案例就是当客户要求一个window或panel中放置一个GRID组件，
+		*     grid组件的大小会随着父容器的大小改变而改变。
+		*/
+		var panel = Ext.create("Ext.panel.Panel", {
+		    title: 'Fit Layout',
+		    //x: 30,
+		    //y: 30,
+		    width: 300,
+		    height: 150,
+		    style : 'margin-top:10px;',
+		    layout: 'fit',
+		    items: {
+		        title: '内部Panel',
+		        html: '内部Panel 的内容',
+		        bodyPadding: 20,
+		        border: false
+		    },
+		    renderTo: "container"
+		});
+		
+	/*
+	*  八、Form Layout 用来组织表单字段的，Form Layout 下的表单字段会被拉伸到表单的宽度。
+	*  表单经常用的布局
+	*/
+		var panel = Ext.create("Ext.panel.Panel", {
+		    width: 350,
+		    height: 240,
+		    style : 'margin-top:10px;',
+		    title: "FormLayout Panel",
+		    layout: 'form',
+		    bodyPadding: 5,
+		    defaultType: 'textfield',
+		    items: [{
+		        fieldLabel: '姓名',
+		        name: 'name',
+		        allowBlank: false
+		    }, {
+		        fieldLabel: '公司',
+		        name: 'company'
+		    }, {
+		        fieldLabel: 'Email',
+		        name: 'email',
+		        vtype: 'email'
+		    }, {
+		        fieldLabel: '年龄',
+		        name: 'age',
+		        xtype: 'numberfield',
+		        minValue: 0,
+		        maxValue: 100
+		    }],
+		    renderTo: "container"
+		});
+	
+	/*
+	*  九、Table Layout 将内容绘制在table标签中，
+	*  table的列数可以指定，还可以通过设置rowSpan和colSpan来创建复杂的布局。
+	*/
+		var panel = Ext.create("Ext.panel.Panel", {
+		    title: 'Table Layout',
+		    width: 300,
+		    height: 150,
+		    style : 'margin-top:10px;',
+		    layout: {
+		        type: 'table',
+		        // 列数
+		        columns: 3
+		    },
+		    defaults: {
+		        bodyStyle: 'padding:20px'
+		    },
+		    items: [{
+		        html: 'Cell A content',
+		        rowspan: 2  //占用两行
+		    }, {
+		        html: 'Cell B content',
+		        colspan: 2  //占用两列
+		    }, {
+		        html: 'Cell C content',
+		        cellCls: 'highlight'
+		    }, {
+		        html: 'Cell D content'
+		    }],
+		    renderTo: "container"
+		});
+	
+	/*
+	*  十、Box Layout 是HBox Layout 和 VBox Layout 的父类，一般不会直接用到。
+	*/
+	
+	/*
+	*  十一、HBox Layout 将子元素放在同一水平位置，通过align设置子元素的对齐方式，对齐方式有：
+    *       1.top : 默认的对其方式，顶部对齐
+    *       2.middle : 中间对齐
+    *       3.bottom : 底部对齐
+    *       4.stretch : 拉伸对齐，所有子元素根据父容器的高度拉伸
+    *       5.stretchmax : 拉伸对齐，所有子元素根据子元素中最高的高度拉伸
+	*/
+		var panel = Ext.create("Ext.panel.Panel", {
+		    width: 600,
+		    height: 300,
+		    style : 'margin-top:10px;',
+		    title: "HBoxLayout Panel",
+		    layout: {
+		        type: 'hbox',
+		        align: 'stretch'
+		    },
+		    items: [{
+		        xtype: 'panel',
+		        title: 'Inner Panel One',
+		        flex: 2
+		    }, {
+		        xtype: 'panel',
+		        title: 'Inner Panel Two',
+		        flex: 1
+		    }, {
+		        xtype: 'panel',
+		        title: 'Inner Panel Three',
+		        flex: 1
+		    }],
+		    renderTo: "container"
+		});
+	
+	/*
+	*  十二、VBox Layout 以垂直的方式组织所有子元素。它的子元素可以通过align属性来设置对齐方式，vbox的对齐方式有：
+    *       1.left : 左对齐，默认对其方式
+    *       2.center : 中间对齐
+    *       3.right : 右对齐
+    *       4.stretch : 以父容器的宽度拉伸对齐
+    *       5.stretchmax : 以所有子元素中的最大宽度拉伸对齐
+	*/
+		var panel = Ext.create("Ext.panel.Panel", {
+		    width: 500,
+		    height: 400,
+		    style : 'margin-top:10px;',
+		    title: "VBoxLayout Panel",
+		    layout: {
+		        type: 'vbox',
+		        align: 'center'
+		    },
+		    items: [{
+		        xtype: 'panel',
+		        title: 'Inner Panel One',
+		        width: 250,
+		        flex: 2
+		    },
+		    {
+		        xtype: 'panel',
+		        title: 'Inner Panel Two',
+		        width: 250,
+		        flex: 4
+		    },
+		    {
+		        xtype: 'panel',
+		        title: 'Inner Panel Three',
+		        width: '50%',
+		        flex: 4
+		    }],
+		    renderTo: "container"
+		});
+		
+ });
+
+
+</script>
+
 </head>
 <body>
-
+<div id="container"></div>
 </body>
 </html>
