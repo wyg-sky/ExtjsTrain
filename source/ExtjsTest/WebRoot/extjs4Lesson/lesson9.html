@@ -1,0 +1,117 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Extjs xtype的含义</title>
+<!-- 在使用ExtJS的时候，我们必须要引用脚本和样式两部分。 脚本的内容可以通过bootstrap.js来自动添加 -->
+<script src="../js/extjs 4.2.1/bootstrap.js"></script>
+<!-- 引入汉语的本地化文件 -->
+<script src="../js/extjs 4.2.1/locale/ext-lang-zh_CN.js"></script>
+<!-- neptune 是在4.2中新增的样式，看上去比较现代一些，但不支持IE6 -->
+<link href="../js/extjs 4.2.1/resources/css/ext-all-neptune.css" rel="stylesheet" />
+
+<script type="text/javascript">
+
+ Ext.onReady(function(){
+	 
+	 window.isShow = function(src){
+         alert("这是图片路径："+src);
+     },
+     
+     window.uploadPic = function(){
+         alert("上传成功！");
+     },
+     
+     window.deletePic = function(){
+         alert("删除成功！");
+     },
+	 
+	 Ext.QuickTips.init();
+	 //定义一个图片模型ImageModel
+	 Ext.define('ImageModel', {
+		    extend: 'Ext.data.Model',
+		    fields: [
+		        { name:'src', type:'string' },
+		        { name:'caption', type:'string' }
+		    ]
+		});
+	    //创建一个仓库(存储器)ID为：imagesStore，指定它匹配的模型为：ImageModel
+		Ext.create('Ext.data.Store', {
+		    id:'imagesStore',
+		    model: 'ImageModel',
+		    data: [
+				{ src:'../image/220x220/computer.ico', caption:'电脑图标' },
+				{ src:'../image/220x220/rigid_disk.ico', caption:'数据硬盘' },
+				{ src:'../image/220x220/store.ico', caption:'数据存储' },
+				{ src:'../image/220x220/setting.png', caption:'设置' },
+		        { src:'http://www.sencha.com/img/20110215-feat-drawing.png', caption:'图画 & 图表' },
+		        { src:'http://www.sencha.com/img/20110215-feat-data.png', caption:'高级数据' },
+		        { src:'http://www.sencha.com/img/20110215-feat-html5.png', caption:'检查主题' },
+		        { src:'http://www.sencha.com/img/20110215-feat-perf.png', caption:'优化性能' }
+		    ]
+		});
+	    //创建一个模板
+		var imageTpl = new Ext.XTemplate(
+			'<table width=100% >',
+		      '<tpl for=".">',
+		            '<tpl if = "xindex==1 || xindex%4==1" >',
+			            '<tr>',
+			        '</tpl>',
+			        '<td><div style="margin-bottom: 10px;" class="thumb-wrap">',
+			        '<a id="showMySteps" href="javaScript:isShow(\'{src}\')">',
+			          '<img id="image_"+{#} class="image_pic" src="{src}" width=220 height=220/>',
+			          '</a>',
+			          '<br/><span>{#}-{caption}-{[xindex]}--{[xcount]}</span>',
+			          '<br/><button style="width:100px;"  id="uploadBtnID" class="upload-btn" onclick="javaScript:uploadPic()">上传</button>',
+			          '<button style="width:100px;" id="deleteBtnID" class="delete-btn" onclick="javaScript:deletePic()">删除</button>',
+			        '</div></td>',
+			        '<tpl if = "xindex%4==0 || xindex == xcount" >',
+	                    '</tr>',
+	                '</tpl>',
+	          '</tpl>',
+	        '</table>');
+	    //定义一个自定义的类(组件)
+		Ext.define('Ext.wyg.imageList',{
+			extend : 'Ext.view.View',
+			baseCls:'x-fy-window',
+			alias : "imageList",//别名
+			xtype: 'imageList',//类型
+			config : {
+				store : this.store,
+	            tpl : this.tpl,
+	            btnHidden : this.btnHidden
+			},
+			itemSelector : 'div.thumb-wrap',
+			emptyText : '没有可用的图片',
+			uploadBtnText : '上传',
+			deleteBtnText : '删除',
+			renderTo : Ext.getBody(),
+			//构造器
+			constructor: function (config) {
+				this.callParent(arguments);
+		        this.initConfig(config);
+		    },
+		    listeners:{  
+		        'afterrender':function(thise, obj){
+		        	console.info(this.getEl());
+		        	//alert('afterrender....');
+		        }
+	        }  
+		    
+		});
+		//创建这个自定义类型
+		Ext.create('imageList',{
+			id : 'Test_xtype',
+			store : Ext.data.StoreManager.lookup('imagesStore'),
+            tpl : imageTpl
+		});
+		
+ });
+ 
+</script>
+ 
+</head>
+<body>
+<div id="list1" style="padding:20px;"></div>
+</body>
+</html>

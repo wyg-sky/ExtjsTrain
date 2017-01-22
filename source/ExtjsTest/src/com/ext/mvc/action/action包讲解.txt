@@ -1,0 +1,4 @@
+action包中，一般是放控制器类的Java类，由于控制接受客户端发送的请求，和返回响应的数据。
+程序通过该层由Action控制去调用那个Manager或者Service业务类。
+（可以理解为后台接受数据的入口和返回响应数据的出口。）
+如：Jsp中的Servlet，Struts中的Action，SpringMVC中的Controller等.

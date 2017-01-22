@@ -1,0 +1,471 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Extjs Form用法详解</title>
+<!-- 在使用ExtJS的时候，我们必须要引用脚本和样式两部分。 脚本的内容可以通过bootstrap.js来自动添加 -->
+<script src="../js/extjs 4.2.1/bootstrap.js"></script>
+<!-- 引入汉语的本地化文件 -->
+<script src="../js/extjs 4.2.1/locale/ext-lang-zh_CN.js"></script>
+<!-- neptune 是在4.2中新增的样式，看上去比较现代一些，但不支持IE6 -->
+<link href="../js/extjs 4.2.1/resources/css/ext-all-neptune.css" rel="stylesheet" />
+<script type="text/javascript">
+		//设置一个总的URL路径
+		var rootUrl = "http://localhost:19090/ExtjsTest";
+		Ext.onReady(function(){
+			
+			/*
+			*    一、FormPanel 远程加载数据第一步，先定义Model模型。
+			*/
+			Ext.define('UserInfo', {
+			    extend: 'Ext.data.Model', 
+                idProperty: 'id',
+			    fields: [
+			          {name:'username',mapping:'uiName'},
+                      {name:'age',mapping:'uiAge'},
+                      {name:'phone',mapping:'uiPhone'},
+                      {name:'email',mapping:'uiEmail'},
+                      {name:'likes',mapping:'uiLikes'},
+                      {name:'faceStatus',mapping:'uiFace'},
+                      {name:'address',mapping:'uiAddress'},
+                      {name:'remark',mapping:'uiRemark'}
+			    ]
+			});
+			/*
+            *    二、FormPanel 远程加载数据第二步，创建一个JSONReader解析器,对应上面创建的Model模型。
+            *    第三步需要在FormPanel中指定该Reader解析器
+            */
+			var userReader = Ext.create('Ext.data.reader.Json', {  
+		        root : 'UserInfo',//数据的根属性，如果只是纯数据对象，没有什么root，那写""（空串）或者空着就行  
+		        model :'UserInfo'//使用的model  
+       	    });
+			
+			Ext.QuickTips.init(); //为组件提供提示信息功能，form的主要提示信息就是客户端验证的错误信息
+			/*
+			* Ext.form.Field.prototype.msgTarget
+			* 1.qtip-当鼠标移动到控件上面时显示提示   
+		    * 2.title-在浏览器的标题显示，但是测试结果是和qtip一样的   
+		    * 3.under-在控件的底下显示错误提示   
+		    * 4.side-在控件右边显示一个错误图标，鼠标指向图标时显示错误提示. 默认值.   
+		    * 5.id-[element id]错误提示显示在指定id的HTML元件中   
+			*/
+			Ext.form.Field.prototype.msgTarget='side'; //提示的方式，枚举值为
+			var form1 = Ext.create("Ext.form.Panel", {
+                width: 500,
+                height: 300,
+                margin: 20,
+                title: "Form",
+                renderTo: Ext.getBody(),
+                collapsible: true,  //可折叠
+                autoScroll: true,   //自动创建滚动条
+                defaultType: 'textfield',
+                defaults: {
+                    anchor: '100%',
+                },
+                fieldDefaults: {
+                    labelWidth: 80,
+                    labelAlign: "left",
+                    flex: 1,
+                    margin: 5
+                },
+                items: [
+                    {
+                        xtype: "container",
+                        layout: "hbox",
+                        items: [
+                            { xtype: "textfield", name: "name", fieldLabel: "姓名", allowBlank: false },
+                            { xtype: "numberfield", name: "age", fieldLabel: "年龄", decimalPrecision: 0, vtype: "age" }
+                        ]
+                    },
+                    {
+                        xtype: "container",
+                        layout: "hbox",
+                        items: [
+                            { xtype: "textfield", name: "phone", fieldLabel: "电话", allowBlank: false, emptyText: "电话或手机号码" },
+                            { xtype: "textfield", name: "phone", fieldLabel: "邮箱", allowBlank: false, emptyText: "Email地址", vtype: "email" }
+                        ]
+                    },
+                    {
+                        xtype: "textareafield",
+                        name: "remark",
+                        fieldLabel: "备注",
+                        height: 50
+                    }
+                ],
+                buttons: [
+                    { xtype: "button", text: "保存" }
+                ]
+            });
+			
+			//创建一个表单面板
+			var formPanel = Ext.create("Ext.form.Panel", {
+				id : 'imageForm',
+	            title: '个人信息表单实例',
+	            width : 600,
+	            height : 300,
+	            //自定义样式
+	            style:{margin:'20px'},
+	            border:0,//边框线为0
+	            layout : 'form',//布局格式为 form布局
+	            collapsible:true,//收缩
+	            autoScroll:true,//滚动条自动显示
+	            defaults: {//默认配置
+                    anchor: '100%'
+                },
+	          //字段默认属性配置
+	            fieldDefaults : {
+	            	labelWidth : 45,//标签宽度
+	            	labelAlign : 'left',//标签位置
+	            	flex: 1,
+	            	margin : 5
+	            },
+	            //指定一个reader,解析器表单字段与数据源字段对应关系.
+	            //主要用于basicFrom使用load加载远程数据
+	            /*
+	            * 对应方法二、使用reader 解析器加载数据
+	            *  三、FormPanel 远程加载数据第三步，在FormPanel中指定该Reader解析器。
+	            */
+	            reader : userReader,
+	            /* reader : new Ext.data.JsonReader({
+	            	root : 'UserInfo',
+	            	model : 'UserInfo'
+	            }), */
+	            //元素
+	            items : [{
+	            	xtype : 'container',
+	            	region:'center',
+	            	defaultType : 'textfield',//默认类型
+	            	layout : {
+	            		type : 'table',//table布局
+	            		columns : 3,//3列
+	            		//表格属性设置
+	            		tableAttrs: {
+	                        style: {//样式设置
+	                            width: '100%',
+	                            align:'center',
+	                            valign : 'middle'
+	                        }
+	                    }
+	            	},
+	            	//元素
+	            	items : [
+	            		{xtype : 'textfield',name:'username',fieldLabel:'用户名',allowBlank:false,emptyText: "请输入用户名...",blankText:'用户名不能为空！'},
+	            		{xtype : 'numberfield',name:'age',fieldLabel:'年龄',decimalPrecision:0,allowBlank:false},
+	            		{
+	            			xtype : 'component',
+	            			id : 'showImage_File',
+	            			rowspan: 3,
+	            			style: {borderColor:'#000000', borderStyle:'solid', borderWidth:'1px',cursor:'pointer'},
+	            			autoEl:{tag:'img',src:'../image/220x220/computer.ico',width:100,height:100,
+	            				//onClick 执行外部JS方法
+	            				//onClick : "javascript:Ext.Msg.alert('提示','你点我干哈？');",
+	            				qtip : "查看明细"
+	            			},
+	            		    listeners : {
+	            		    	el:{
+	            		    		'click' : function(){
+	                                    //Ext.Msg.alert('提示','不要乱点啊啊啊！！！');
+	            		    			var formPanel = new Ext.form.FormPanel({
+	            		    			    baseCls: 'x-plain',
+	            		    			    labelWidth: 80,
+	            		    			    fileUpload:true,
+	            		    			    defaultType: 'textfield',
+	            		    			    bodyStyle : 'align:center;text-align:center;',
+	            		    			    items: [{
+	            		    			    	xtype: 'textfield',
+	            		    			        name: 'fileName',
+	            		    			        fieldLabel: 'fileName',
+	            		    			        anchor: '70%'
+	            		    			    },{
+	            		    			      xtype: 'filefield',
+	            		    			      fieldLabel: '文件名',
+	            		    			      name: 'userfile',
+	            		    			      //inputType: 'file',
+	            		    			      allowBlank: false,
+	            		    			      blankText: 'File can\'t not empty.',
+	            		    			      /* listeners : {
+                                                  change : function(thisField, String ,eOpts ){
+                                                      alert("文件改变了");
+                                                  }
+                                              }, */
+	            		    			      anchor: '70%'  // anchor width by percentage
+	            		    			    }]
+	            		    			  });
+
+	            		    			  var win = new Ext.Window({
+	            		    			    title: 'Upload file',
+	            		    			    width: 470,
+	            		    			    height:330,
+	            		    			    minWidth: 300,
+	            		    			    minHeight: 250,
+	            		    			    layout: {
+	            		    	                type: 'vbox',
+	            		    	                align: 'center'
+	            		    	            },
+	            		    			    plain:true,
+	            		    			    bodyStyle : 'padding : 5px;',
+	            		    			    buttonAlign:'center',
+	            		    			    items: [formPanel,{
+                                                xtype : 'box',
+                                                id : 'myphoto',
+                                                style: {borderColor:'#000000', borderStyle:'solid', borderWidth:'1px',cursor:'pointer',align:'center',valign : 'middle'},
+                                                autoEl:{tag:'img',src:'../image/220x220/upload.jpg',width:200,height:180,qtip : "查看明细"}
+                                            }],
+	            		    			    buttons: [{
+                                                text : '上传',
+                                                handler: function() {
+                                                    if('' != formPanel.getForm().findField('userfile').getValue()){
+                                                        Ext.MessageBox.show({
+                                                            title: '请稍等',
+                                                            msg: '上传中...',
+                                                            progressText: '',
+                                                            width:300,
+                                                            progress:true,
+                                                            closable:false,
+                                                            animEl: 'loding'
+                                                          });
+                                                        formPanel.getForm().submit({
+                                                    	   //standardSubmit: true, 同步提交
+                                                    	    url : rootUrl + '/UploadImage',
+															params: {
+															     newStatus: 'delivered'
+															},
+	                                                         success: function(form, action){
+	                                                        	 //var msg = action.result ? Ext.JSON.decode(action.result.msg) : {};
+	                                                        	 var data = action.result.msg;
+	                                                            var myphoto = Ext.get('myphoto');
+	                                                            var fileName = formPanel.getForm().findField('fileName');
+	                                                            //console.info(data[0]);
+	                                                            var pathStr = data[0].replace(/\\/g,'/');
+	                                                            //console.info(pathStr);
+	                                                            fileName.setValue(pathStr);
+	                                                            myphoto.dom.src =  '/ExtjsTest/UploadImage?type=showImage&path='+pathStr;
+	                                                            Ext.Msg.alert('提示','上传成功！');
+	                                                         },
+	                                                          failure: function(form, action){
+	                                                        	  var msg = action.result ? Ext.JSON.decode(action.result) : '异常，上传失败';
+	                                                        	   //console.info(action.failureType);
+	                                                        	   Ext.Msg.alert('Error', msg);
+	                                                          }
+                                                       });
+                                                        
+                                                        
+                                                    }else{
+                                                        Ext.Msg.alert('提示','请先选择要上传的图片' );
+                                                    }
+                                                      /* if(formPanel.form.isValid()){
+                                                                 
+                                                    } */
+                                                }
+                                            },{
+	            		    			      text: '保存',
+	            		    			      handler: function() {
+	            		    			    	  var fileName = formPanel.getForm().findField('fileName');
+	            		    			    	  if('' != fileName.getValue()){
+	                                                  var showImage_File = Ext.get('showImage_File');
+	                                                  showImage_File.dom.src = '/ExtjsTest/UploadImage?type=showImage&path='+fileName.getValue();
+	                                                  win.close();
+	            		    			    	  }else{
+	            		    			    		  Ext.Msg.alert('提示','请先上传图片' );
+	            		    			    	  }
+	            		    			       }
+	            		    			    },{
+	            		    			      text: '关闭',
+	            		    			      handler:function(){win.close();}
+	            		    			    }]
+	            		    			  });
+	            		    			  win.show();
+	                                }
+	                            }
+	            		    }
+            			},
+	            		{xtype : 'textfield',name:'phone',fieldLabel:'电话',allowBlank:false,emptyText: "请输入电话...",blankText:'电话或手机号码不能为空！'},
+                        {xtype : 'textfield',name:'email',fieldLabel:'邮箱',allowBlank:false,emptyText: "请输入电子邮箱...",blankText:'电子邮箱不能为空！'},
+                        {xtype : 'textfield',name:'likes',fieldLabel:'爱好',allowBlank:false},
+                        //----------------------下拉列表开始----------------------//
+                        {
+                        	xtype : 'combobox',
+                        	name : 'faceStatus',
+                        	fieldLabel :'面貌',
+                        	displayField : 'name',
+                        	valueField : 'id',
+                        	triggerAction : 'all',
+                        	mode: 'local',
+                        	allowBlank: false,
+                        	emptyText: '请选择...',
+                        	blankText: '请选择政治面貌',
+                        	editable: false,
+                        	store: {
+                        		type : 'array',
+                        		fields : ['id','name'],
+                        		data : [[1, '团员'], [2, '党员'], [3, '群众'], [4, '农民'], [5, '其他']]
+                        	},
+                        	listeners : {
+                        		'select' : function(combo,records, eOpts ){
+                        			Ext.Msg.alert('标题-提示','你选择的是 : ' + combo.getValue()+'--'+combo.getRawValue());
+                        		}
+                        	}
+                        }
+                      //----------------------下拉列表结束----------------------//
+	            	]
+	            },{
+	            	xtype : 'container',
+	            	layout : 'anchor',
+	            	items:[
+                            { xtype: "textfield", name: "address", fieldLabel: "地址",anchor:'99%'},
+                            { xtype: "textareafield", name: "remark", fieldLabel: "备注",anchor:'99%'}
+	            	]
+	            }],
+	            buttons: [{
+                    xtype: "button", 
+                    text: "校验表单",
+                    handler : function(btn){
+                    	Ext.Msg.alert('标题-提示','校验表单');
+                    	/*
+                    	* Extjs  中获取组件的方式：
+                    	*         Ext.getCmp("id_name");获取指定ID的Extjs对象组件，返回的是Ext.Component对象(Extjs中的对象组件)。
+                    	*         Ext.get("div1"); 获取匹配元素的Ext.Element类型(获取第一个,单个)，返回的是 Ext.dom.Element 对象。
+                        *         Ext.fly("div1"); 意义同上.
+                        *         Ext.get("div1").dom 返回Id=div1的元素的dom对象
+                        *         Ext.getDom("div1"); 同上
+                    	*         Ext.select("#div1"); 获取匹配的元素集合(获取多个，集合)，返回的事DOM元素 Ext.dom.Element 对象。
+                    	*         Ext.select("div[title='d1']"); 查询属性title=d1的div,返回满足条件的集合Ext.CompositeElement类型
+                    	*         Ext.query("div[title='d1']"); 查询属性title=d1的div,返回满足条件的dom节点集合
+                    	*         Ext.getBody();  获取body元素的Ext.Element类型
+                    	*         Ext.getDoc(); 返回当前HTML文档的Ext.Element类型
+                    	*  第一种：获得当前组件ExtEL的up上级组件或者down下级组件，括弧中的应该是xtype名称，而不是id名称.
+                    	*  ExtEL.up('xtype_name') : 获得当前组件的上级组件，需要指定名称.
+                    	*  ExtEL.down('xtype_name'); 获得当前组件的下级组件，需要指定名称.
+                    	* 
+                    	*/
+                    	var fromOne = btn.up('toolbar').up('form');//1.先获得按钮的上级toolbar，在获取上级组件form
+                    	console.info(fromOne);
+                    	console.log(formPanel);//直接使用 变量名 formPanel
+                    	var fromOne2 = btn.up('form');//1.直接获取上级组件form
+                    	console.log(fromOne2);
+                    	var fromTwo = Ext.getCmp("imageForm");//2.获取ID为"imageForm"的Ext组件对象
+                    	console.info(fromTwo);
+                    	var fromThree = btn.ownerCt.ownerCt;//3.获得上级(toolbar)组件的上级(formPanel)组件.
+                    	console.info(fromThree);
+                    	if(fromOne.getForm().isValid()){
+                    		Ext.Msg.show({
+                    			title : '提示',
+                    			msg : '表单已通过校验!',
+                    			buttons : Ext.Msg.YES,//OK、YES 、NO、YESNO、CANCEL、YESNOCANCEL、OKCANCEL
+                    			icon: Ext.Msg.INFO//INFO、QUESTION、WARNING、ERROR
+                    		});
+                    	}else{
+                    		Ext.Msg.show({
+                                title : '警告',
+                                msg : '表单不完善，未通过验证!',
+                                buttons : Ext.Msg.OK,
+                                icon: Ext.Msg.WARNING
+                            });
+                    	}
+                    }
+                },{
+	            	xtype: "button", 
+	            	text: "提交到后台",
+	            	handler : function(){
+	            		Ext.Msg.alert('标题-提示','校验表单');
+	            	}
+	            },{
+	            	xtype: "button", 
+                    text: "加载文件数据",
+                    handler : function(){
+                    	Ext.Msg.alert('标题-提示','加载文件数据');
+                    	/* //一、远程加载方式一 
+                    	var imageForm = Ext.getCmp('imageForm'); 
+                    	var recordType = imageForm.getRecord();
+                        var id=1;//角色的id
+                        Ext.ModelMgr.getModel('UserInfo').load( id,{
+                            url:"../js/MyApp/formLoadJson.json", 
+                            success: function(record, operation) {
+                                //do something if the load succeeded
+                                var backObj = record.raw.UserInfo;
+                                console.info(backObj);
+                                var json = Ext.JSON.decode(operation.response.responseText||{});
+                                console.info(json.UserInfo);
+                                //由于前台字段属性名称与远程获取的字段属性名称不一致，所以在此手动赋值，并加载到Form表单中。
+                                var formTypeObj = {
+                                        'username':backObj.uiName,
+                                        'age':backObj.uiAge,
+                                        'phone':backObj.uiPhone,
+                                        'email':backObj.uiEmail,
+                                        'likes':backObj.uiLikes,
+                                        'faceStatus':backObj.uiFace,
+                                        'address':backObj.uiAddress,
+                                        'remark':backObj.uiRemark
+                                };
+                                //1.通过普通对象加载表单元素值
+                                imageForm.getForm().setValues(formTypeObj);
+                              //由于前台字段属性名称与远程获取的字段属性名称不一致，所以在此手动赋值，并加载到Form表单中。
+                                var formTypeModel = Ext.create('UserInfo',{
+                                        'username':backObj.uiName,
+                                        'age':backObj.uiAge,
+                                        'phone':backObj.uiPhone,
+                                        'email':backObj.uiEmail,
+                                        'likes':backObj.uiLikes,
+                                        'faceStatus':backObj.uiFace,
+                                        'address':backObj.uiAddress,
+                                        'remark':backObj.uiRemark
+                                });
+                                //2.通过创建模型对象加载表单元素值
+                                imageForm.loadRecord(formTypeModel);
+                            },
+	                        failure: function(record, operation) {
+	                            //do something if the load failed
+	                        },
+	                        callback: function(record, operation) {
+	                            //do something whether the load succeeded or failed
+	                        }
+                        });  */
+                    	/*
+                    	*  四、FormPanel 远程加载数据第四步，通过formPanel.load()方法远程加载数据。
+                    	*  远程load加载成功时，根据reader解析器 字段与字段直接的映射，自动赋值!
+                    	*/
+                    	//获取formPanel，可以有多种获取方法
+                    	//②对应：远程加载方式二
+                    	formPanel.load({
+                    		//远程load加载成功时，根据reader解析器，自动赋值!
+                    	    url: '../js/MyApp/formLoadJson.json',//要请求的远程URL(此项必须存在)
+                    	    //要传送的参数对象(Params参数可以省略)
+                    	    params: {
+                    	        parameter1 : '参数一'
+                    	    },
+                    	    //加载远程数据失败时的提示信息(failure失败回答方法可以省略.)
+                    	    failure: function(form, action) {
+                    	        Ext.Msg.alert("Load failed", action.result.errorMessage||"加载文件数据失败!");
+                    	    }
+                    	});
+                    }
+	            },{
+                    xtype: "button", 
+                    text: "加载后台数据",
+                    handler : function(){
+                    	Ext.Msg.alert('标题-提示','加载后台数据');
+                    }
+                }],
+	            renderTo: Ext.getBody()
+	        });
+		});
+
+</script>
+</head>
+<body>
+<div id="description" style="font-size:15px;">
+		<h1>Extjs Form用法详解</h1>
+		Extjs Form是一个比较常用的控件，主要用来显示和编辑数据的，今天这篇文章将介绍Extjs Form控件的详细用法，包括创建Form、添加子项、加载和更新数据、验证等。
+		<br>
+		<h4>Form和Form Basic</h4>
+		<br>
+		
+		Extjs Form和Form Basic是两个东西，Form提供界面的展示，而Form Basic则提供数据的处理、验证等功能。
+		每一个Form Panel在创建的时候，都会绑定一个Form Basic，我们可以通过方法getForm来获取：
+		form.getForm()
+		<br>
+		在API方面，Form的config中没有显示Form Basic的config，但是Form Basic的config在Form的config中完全有效.
+		也就是说，当我们使用Extjs Form的时候，不仅仅要查看Form的API文档，还要浏览相关的Form Basic的文档。
+</div>
+</body>
+</html>

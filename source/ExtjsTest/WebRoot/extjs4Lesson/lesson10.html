@@ -1,0 +1,183 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Extjs Window用法详解</title>
+<!-- 在使用ExtJS的时候，我们必须要引用脚本和样式两部分。 脚本的内容可以通过bootstrap.js来自动添加 -->
+<script src="../js/extjs 4.2.1/bootstrap.js"></script>
+<!-- 引入汉语的本地化文件 -->
+<script src="../js/extjs 4.2.1/locale/ext-lang-zh_CN.js"></script>
+<!-- neptune 是在4.2中新增的样式，看上去比较现代一些，但不支持IE6 -->
+<link href="../js/extjs 4.2.1/resources/css/ext-all-neptune.css" rel="stylesheet" />
+
+<script type="text/javascript">
+		Ext.onReady(function(){
+				var win = Ext.create('Ext.window.Window',{
+					   id : 'myFirstWindow',
+					   title : '窗口一',
+					   width : 500,
+					   height : 300,
+					   headerPosition: 'left',
+	                    plain: true,
+					   x : 10,
+					   y : 10,
+					   layout : 'fit',
+					   //自动显示 是或否
+					   autoShow: true,
+					   //什么是模态化窗口：当打开一个模态窗口的时候，只有模态窗口可操作，它背后的东西都会被遮罩，从而变得不能操作。
+					   //是否模态化窗口：是或否
+					   modal: true,
+					   //关闭按钮和关闭动作
+					   //是否显示关闭按钮：是或否
+					   closable : false,
+					   //关闭动作：要执行的动作是销毁它？还是隐藏它？默认关闭时销毁它。
+					   //关闭动作：销毁（destroy）和 隐藏（hide） ，推荐关闭时销毁，这样不会占用内存。
+					   closeAction: "hide",
+					   //Window的最大化和最小化按钮
+					   maximizable: true,
+					   minimizable: true,
+					   //是否可折叠/展开,默认false,当设置为true时切换按钮被添加到panel的标题头区域
+					   collapsible : true,
+					   //窗口一的组件元素
+					   items : [{
+						   //windows窗口一中的第一个元素是from
+						    xtype: "form",
+						    border: false,
+						    id : 'form1',
+				            defaultType: 'textfield',
+				            defaults: {
+				                anchor: '100%'
+				            },
+				            fieldDefaults: {
+				                labelWidth: 80,
+				                labelAlign: "left",
+				                flex: 1,
+				                margin: 5
+				            },
+				            //form1的元素
+				            items : [{
+				            	xtype : 'container',//form1的第一个元素
+				            	layout : 'hbox',
+				            	id : 'container1',
+				            	//container1的items元素
+				            	items : [{
+				            		xtype : 'textfield',//container1的第一个元素
+				            		name : 'username',
+				            		fieldLabel : '用户名',
+				            		allowBlank : false
+				            	},{
+				            		xtype: "numberfield", //container1的第二个元素
+				            		name: "age", 
+				            		fieldLabel: "年龄",
+				            		decimalPrecision: 0,
+				            		vtype: "age"
+				            	}]
+				            }]
+					   }],
+					   //窗口一的按钮元素
+					   buttons : [{
+                           xtype : 'button',
+                           text : '点击该按钮执行某个方法',
+                           handler : function(){
+                        	   var back = Ext.Msg.show({
+                        		     title:'提示信息',
+                        		     msg: '确定要保存更改吗?',
+                        		     buttons: Ext.Msg.YESNOCANCEL,
+                        		     icon: Ext.Msg.QUESTION,
+                        		     fn : function(buttonId,text ,opt ){
+                        		    	 if(buttonId=='ok'){
+                        		    		 Ext.Msg.alert('提示alert', '被点击的按钮是：'+buttonId);
+                                         }
+                        		    	 if(buttonId=='yes'){
+                        		    		 Ext.Msg.alert('提示alert', '被点击的按钮是：'+buttonId);
+                        		    	 }
+										if(buttonId=='no'){
+											Ext.Msg.alert('提示alert', '被点击的按钮是：'+buttonId);  
+                                        }
+										if(buttonId=='cancel'){
+											Ext.Msg.alert('提示alert', '被点击的按钮是：'+buttonId);
+										}
+                        		     },
+                        	         scope : this
+                        		});
+                        	   console.info(back);
+                           }
+                        },{
+						   xtype : 'button',
+						   text : '确定',
+						   handler : function(){
+							   this.up('window').close();
+						   }
+					    },
+					   {xtype : 'button',text : '关闭',handler : function(){this.up("window").close();}}
+					  ],
+					  listeners: {
+						    minimize: function (win, opts) {
+						        win.collapse();
+						    }
+						}
+				});
+				/*
+				*   使用上面的代码创建好的Window并没有显示出来，它只是创建了Window，而这个Window在默认情况下是不显示的。
+			    *    如果要它显示出来，我们可以通过在配置项中添加autoShow来实现，代码如下：
+				*       autoShow: true,
+				*   或者，我们可以显示的调用window的show方法：
+				*       win.show();
+				*/
+				win.show();
+				
+				/**
+				*   二、在Extjs Window中显示iframe
+				*   在Window中，既可以添加Extjs控件，也可以显示html代码。
+				*   我们可以通过html配置项来将一个iframe添加到window中
+				**/
+				var win2 = Ext.create("Ext.window.Window", {
+				    id: "myWin",
+				    title: "示例窗口-iframe",
+				    width: 700,
+				    height: 500,
+				    layout: "fit",
+				    autoShow: true,
+				    html: '<iframe style="overflow:auto;width:100%; height:100%;" src="http://www.baidu.com" frameborder="0"></iframe>',
+				});
+				
+				/*
+				*   三、在Extjs Window中显示大段HTML
+				*       html配置项可以帮助我们在window中显示一段较简单的html代码，如果要显示太复杂的html，写在js代码中显然是有些不利于组织和维护。
+				*       那么要显示大段html的时候，我们可以事先将它写在html代码中，然后通过contentEl配置项将它显示在window中。
+				*/
+				//1.第一步：首先，在html中添加一段代码：下面body中的<div id="content">....</div>代码段。
+				
+				//2.创建window，contentEl配置项将它显示在window中
+				var win3 = Ext.create("Ext.window.Window", {
+				    id: "myWin3",
+				    title: "示例窗口",
+			        headerPosition: 'bottom',
+			        plain: true,
+				    width: 500,
+				    height: 300,
+				    x : 850,
+				    y : 320,
+				    layout: "fit",
+				    autoShow: true,
+				    contentEl: "content"
+				});
+		});
+
+</script>
+
+</head>
+<body>
+        <!-- 
+            这种方式是先将html元素绘制在body中，然后再将它从body移动到window容器内的，所以可能会引起闪烁的现象。
+            解决闪烁的办法是先将div隐藏，然后在移动到window后进行显示。
+            Extjs也考虑到了这个问题，并提供了两个css class来解决，分别是：x-hidden和x-hide-display，我们可以将任意一个属css class添加到元素中，问题就会解决了。
+         -->
+		<div id="content" class="x-hidden">
+		    <h2>欢迎访问起飞网Extjs教程</h2>
+		    <p>
+		        更多Extjs教程，请访问<a href="http://www.qeefee.com/zt-extjs" target="_blank">http://www.qeefee.com/zt-extjs</a>
+		    </p>
+		</div>
+</body>
+</html>

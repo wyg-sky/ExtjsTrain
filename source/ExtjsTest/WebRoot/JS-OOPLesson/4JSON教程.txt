@@ -92,7 +92,7 @@ obj.users[1].age->->访问obj对象里面的users[1]对象的age属性。
 $.parseJSON( jsonstr ); //jQuery.parseJSON(jsonstr),可以将json字符串转换成json对象 
 
 
-2.>浏览器支持的转换方式(Firefox，chrome，opera，safari，ie9，ie8)等浏览器 (推荐)
+2.>浏览器支持的转换方式(Firefox，chrome，opera，safari，ie9，ie8)等浏览器 (推荐使用这种)
 JSON.parse(jsonStr); //可以将JSON字符串转换成JSON对象
 JSON.stringify(jsonObj); //可以将JSON对象转换成JSON对符串 
 
