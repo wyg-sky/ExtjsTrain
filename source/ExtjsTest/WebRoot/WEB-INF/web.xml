@@ -72,7 +72,6 @@
     <servlet-name>DjnServlet</servlet-name>
     <url-pattern>/djn/directprovider/*</url-pattern>
   </servlet-mapping>
-  <!-- 一个图片上传实例开始 -->
   <servlet>
     <description>图片上传演示实例</description>
     <display-name>Upload</display-name>
@@ -83,5 +82,14 @@
     <servlet-name>Upload</servlet-name>
     <url-pattern>/UploadImage</url-pattern>
   </servlet-mapping>
-  <!-- 一个图片上传实例结束 -->
+  <servlet>
+    <description></description>
+    <display-name>SubmitForm</display-name>
+    <servlet-name>SubmitForm</servlet-name>
+    <servlet-class>com.ext.mvc.action.SubmitForm</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>SubmitForm</servlet-name>
+    <url-pattern>/SubmitForm.do</url-pattern>
+  </servlet-mapping>
 </web-app>

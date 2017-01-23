@@ -1,12 +1,8 @@
 package com.ext.mvc.action;
 
-import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.HashMap;
@@ -18,9 +14,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang3.StringUtils;
-
 import net.sf.json.JSONObject;
+
+import org.apache.commons.lang3.StringUtils;
 
 import com.ext.mvc.manager.UploadFileManager;
 import com.ext.mvc.manager.impl.UploadFileManagerImpl;
@@ -102,12 +98,18 @@ public class Upload extends HttpServlet {
 	            System.out.println("================>返回结果："+JSONObject.fromObject(backObj).toString());
 	             out.println(JSONObject.fromObject(backObj).toString());
 	        }else{
-	            out.println("上传失败!");
+	            out.println("{\"success\":false,\"msg\":\"上传失败!\"}");
 	        }
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            out.close();
+            if(null != out){
+                try {
+                    out.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
         }
 	    
 	    

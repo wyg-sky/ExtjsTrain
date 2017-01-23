@@ -1,0 +1,109 @@
+AJAX = Asynchronous JavaScript and XML（异步的 JavaScript 和 XML）。
+
+这个AJAX有什么好处呢，我们平常的Web页面，要想获取服务端数据的时候，需要重新加载页面，或者重新改变地址栏去请求一个新的URL地址请求服务器，URL改变后或者页面跳转后才可以接收到返回数据，而AJAX可以异步处理这些请求，就是不重新加载整个网页，不刷新网页，不切换浏览器网址(地址栏中不用变更URL的情况下)，进行异步请求并处理返回的数据。客户端不会出现刷新网页的情况！
+
+异步请求：就是和别的请求或别的程序(别的工作)不用同步执行，我自己干我自己的，你们其他的请求完成不完成和我没关系，
+反正我是和你们不同步的请求，我是异步的，自己处理自己的请求，然后在回调函数里面接受返回来的结果值。
+
+异步请求-->1.请求后台服务器的数据，2.请求某个文件的数据，3.请求其它数据等等。
+
+
+
+
+AJAX执行步骤：
+
+1.第一步，建立XMLHttpRequest对象
+
+	xmlHttpRequest这是浏览器的内置对象，浏览器版本不同这个对象名称不同。
+  	只有创建这个对象，才能进行后续一系列的请求。
+	XMLHttpRequest对象用来和服务器交换数据。
+
+	var xmlhttp;
+	if (window.XMLHttpRequest)
+	{
+		// IE7+, Firefox, Chrome, Opera, Safari 浏览器执行代码
+		xmlhttp=new XMLHttpRequest();
+	}
+	else
+	{
+		// IE6, IE5 浏览器执行代码
+		xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+	}
+
+
+2.第二步，使用XMLHttpRequest对象的open（）方法和send（）方法发送资源请求给服务器。
+	
+	xmlhttp.open("提交方式:get/post","URL地址","是否异步:true/false"); 该方法与服务器建立连接，并设置参数。
+
+	xmlhttp.send("设置参数或者为空");该方法向服务器发送参数，正式向服务器请求数据。
+
+	
+	//①.open方法使用GET方式建立与服务器的链接，设置参数。
+	//GET方式提交如何传递参数-->直接在URL后面添加
+	xmlhttp.open("GET","/test/userInfo.do?id=123456&name=王刚",true);
+	//建立好链接之后，执行send()方法，发送数据，进行请求！
+	xmlhttp.send();
+
+	//②.open方法使用POST方式建立与服务器的链接，设置参数。
+	xmlhttp.open("POST","/test/userInfo.do",true);
+	//如果是提交HTML表单数据，则必须添加请求头，如下：(如果不是表单提交可省略设置请求头)
+  	xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+	//POST方式提交如何传递参数-->直接在send(参数...)方法中传递参数.
+  	xmlhttp.send("id=12345&name=王刚");
+
+3.第三步，监听回调函数，判断请求的状态。onreadystatechange函数
+
+	onreadystatechange函数，当发送请求到后台服务器，我们想要知道请求过程到达了那一步，服务器是否响应正常等信息就需要监听onreadystatechange函数。每次xmlhttprequest对象的readyState发生改变都会触发onreadystatechange函数。
+
+注意： onreadystatechange 事件被触发 5 次（0 - 4），对应着 readyState 的每个变化。
+
+存有 XMLHttpRequest 的状态。从 0 到 4 发生变化。
+
+readyState 对象如下状态：
+
+    0: 请求未初始化
+    1: 服务器连接已建立
+    2: 请求已接收
+    3: 请求处理中
+    4: 请求已完成，且响应已就绪
+    注意： onreadystatechange 事件被触发 5 次（0 - 4），对应着 readyState 的每个变化,每一步都会触发一次事件。
+
+status 对象如下状态：
+
+	200: "OK"
+	404: 未找到页面
+
+这个onreadystatechange函数里面没有方法体(没有代码，没有执行过程，没有内容)，需要我们自己写代码，判断在那种状态下我们需要怎么处理，下一步怎么办。
+	
+	//监听xmlhttp对象的onreadystatechange方法
+	xmlhttp.onreadystatechange=function(){
+		//下面是自己的处理逻辑：当readyState对象等于4 并且 status对象等于200，表示请求正常完成时，执行下一步。
+		if (xmlhttp.readyState==4 && xmlhttp.status==200)
+		{
+			//请求正常完成时，执行如下代码
+			document.getElementById("myDiv").innerHTML=xmlhttp.responseText;
+
+			//xmlhttp.responseText获得服务器的响应数据
+		}
+	}
+
+4.第四步，使用xmlhttprequest对象的responseText或responseXML属性获得服务器的响应数据。
+
+	①.使用responseText属性得到服务器响应的字符串数据(常用方式) 一般为JSON格式，
+	②.使用responseXML属性得到服务器响应的XML数据(不常用了)。
+
+	例子如下：
+		1.document.getElementById("demo").innerHTML = xhttp.responseText;
+
+		2.服务器响应的XML数据需要使用XML对象进行转换。
+
+			xmlDoc = xhttp.responseXML;
+			txt = "";
+			x = xmlDoc.getElementsByTagName("ARTIST");
+			for (i = 0; i < x.length; i++) {
+				txt += x[i].childNodes[0].nodeValue + "<br>";
+			}
+			document.getElementById("demo").innerHTML = txt;
+
+
+

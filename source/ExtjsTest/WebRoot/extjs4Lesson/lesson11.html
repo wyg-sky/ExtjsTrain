@@ -10,6 +10,28 @@
 <!-- neptune 是在4.2中新增的样式，看上去比较现代一些，但不支持IE6 -->
 <link href="../js/extjs 4.2.1/resources/css/ext-all-neptune.css" rel="stylesheet" />
 <script type="text/javascript">
+
+		/*
+		* @description ： 长字符串中插入换行符
+		* @author : WangYG
+		* @parameter{
+		*	 String str : 需要换行的字符串
+		*   int  num : 换行间隔数
+		* }
+		*/
+		function insertEnter(str,num){
+			 var len = str.length;
+			 var strTemp = '';
+			 if(len > num){
+				  strTemp = str.substring(0,num);
+				  str = str.substring(num,len);
+				   return strTemp+'<br />'+insertEnter(str,num);
+			 }else{
+				   return str;
+			 }
+		}
+
+
 		//设置一个总的URL路径
 		var rootUrl = "http://localhost:19090/ExtjsTest";
 		Ext.onReady(function(){
@@ -165,7 +187,7 @@
 	            		    	el:{
 	            		    		'click' : function(){
 	                                    //Ext.Msg.alert('提示','不要乱点啊啊啊！！！');
-	            		    			var formPanel = new Ext.form.FormPanel({
+	            		    			var uploadFormPanel = new Ext.form.FormPanel({
 	            		    			    baseCls: 'x-plain',
 	            		    			    labelWidth: 80,
 	            		    			    fileUpload:true,
@@ -205,7 +227,7 @@
 	            		    			    plain:true,
 	            		    			    bodyStyle : 'padding : 5px;',
 	            		    			    buttonAlign:'center',
-	            		    			    items: [formPanel,{
+	            		    			    items: [uploadFormPanel,{
                                                 xtype : 'box',
                                                 id : 'myphoto',
                                                 style: {borderColor:'#000000', borderStyle:'solid', borderWidth:'1px',cursor:'pointer',align:'center',valign : 'middle'},
@@ -214,7 +236,7 @@
 	            		    			    buttons: [{
                                                 text : '上传',
                                                 handler: function() {
-                                                    if('' != formPanel.getForm().findField('userfile').getValue()){
+                                                    if('' != uploadFormPanel.getForm().findField('userfile').getValue()){
                                                         Ext.MessageBox.show({
                                                             title: '请稍等',
                                                             msg: '上传中...',
@@ -232,9 +254,9 @@
 															},
 	                                                         success: function(form, action){
 	                                                        	 //var msg = action.result ? Ext.JSON.decode(action.result.msg) : {};
-	                                                        	 var data = action.result.msg;
+	                                                        	var data = action.result.msg;
 	                                                            var myphoto = Ext.get('myphoto');
-	                                                            var fileName = formPanel.getForm().findField('fileName');
+	                                                            var fileName = uploadFormPanel.getForm().findField('fileName');
 	                                                            //console.info(data[0]);
 	                                                            var pathStr = data[0].replace(/\\/g,'/');
 	                                                            //console.info(pathStr);
@@ -253,14 +275,14 @@
                                                     }else{
                                                         Ext.Msg.alert('提示','请先选择要上传的图片' );
                                                     }
-                                                      /* if(formPanel.form.isValid()){
+                                                      /* if(uploadFormPanel.form.isValid()){
                                                                  
                                                     } */
                                                 }
                                             },{
 	            		    			      text: '保存',
 	            		    			      handler: function() {
-	            		    			    	  var fileName = formPanel.getForm().findField('fileName');
+	            		    			    	  var fileName = uploadFormPanel.getForm().findField('fileName');
 	            		    			    	  if('' != fileName.getValue()){
 	                                                  var showImage_File = Ext.get('showImage_File');
 	                                                  showImage_File.dom.src = '/ExtjsTest/UploadImage?type=showImage&path='+fileName.getValue();
@@ -367,7 +389,48 @@
 	            	xtype: "button", 
 	            	text: "提交到后台",
 	            	handler : function(){
-	            		Ext.Msg.alert('标题-提示','校验表单');
+	            		//Ext.Msg.alert('标题-提示','将数据提交到后台进行处理！');
+	            		if(formPanel.getForm().isValid()){
+	            			formPanel.getForm().submit({
+	                            url : rootUrl +'/SubmitForm.do',
+	                            params : {
+	                                des : '表单提交例子',
+	                                date : '2017-1-13'
+	                            },
+	                            success : function(form,action){
+	                                var data = action.result.data;
+	                                console.info(data);
+	                                //JSON.stringify(data) 浏览器原生转换方式
+	                                var jsonStr = JSON.stringify(data);//Ext.JSON.encode(data) ExtJS的编码解析
+	                                //处理中文乱码问题
+	                                //jsonStr = encodeURIComponent(jsonStr,"utf-8");
+	                                //处理Msg消息框显示不全的问题
+	                                var msgD = insertEnter('表单提交成功!<br>'+ '返回到前台的数据为:'+jsonStr,120);
+	                                Ext.Msg.show({
+                                        title : '成功',
+                                        msg : msgD,
+                                        buttons : Ext.Msg.OK,
+                                        icons : Ext.Msg.INFO
+                                    });
+	                            },
+	                            failure : function(form,action){
+	                                var data = action.result.data || "表单提交失败!";
+	                                Ext.Msg.show({
+	                                    title : '失败',
+	                                    msg : data || '表单提交失败!',
+	                                    buttons : Ext.Msg.OK,
+	                                    icons : Ext.Msg.ERROR
+	                                });
+	                            }
+	                        });
+                        }else{
+                            Ext.Msg.show({
+                                title : '警告',
+                                msg : '表单不完善，未通过验证!',
+                                buttons : Ext.Msg.OK,
+                                icon: Ext.Msg.WARNING
+                            });
+                        }
 	            	}
 	            },{
 	            	xtype: "button", 
@@ -443,8 +506,38 @@
                     xtype: "button", 
                     text: "加载后台数据",
                     handler : function(){
-                    	Ext.Msg.alert('标题-提示','加载后台数据');
+                    	//Ext.Msg.alert('标题-提示','加载后台数据');
+                    	formPanel.load({
+                            //远程load加载成功时，根据reader解析器，自动赋值!
+                            url : '/ExtjsTest/SubmitForm.do',//要请求的远程URL(此项必须存在)
+                            method : 'GET',//指定请求方式为GET方式
+                            //要传送的参数对象(Params参数可以省略)
+                            params: {
+                                loadType : 'GET',//参数一
+                                id : '100'//参数二 要查找的ID
+                            },
+                            success : function(form, action){
+                            	var json = Ext.JSON.decode(action.response.responseText || {});
+                            	//1.第一种加载数据方式
+                            	formPanel.getForm().setValues(json.UserInfo);
+                            	//2.第二种加载数据方式。 ①.先将返回值创建成表单面板认知Model模型格式.②.再通过loadRecord()方法将Model模型加载到表单中.
+                            	var rawTypeModel = Ext.create('UserInfo',json.UserInfo);
+                                formPanel.loadRecord(rawTypeModel);
+                                Ext.Msg.alert("成功","加载成功! Oh, great !");
+                            },
+                            //加载远程数据失败时的提示信息(failure失败回答方法可以省略.)
+                            failure: function(form, action) {
+                            	var json = Ext.JSON.decode(action.response.responseText || {});
+                                Ext.Msg.alert("失败", json.msg ||"加载远程数据失败!");
+                            }
+                        });
                     }
+                },{
+                	xtype : 'button',
+                	text : '重置表单',
+                	handler : function(){
+                		formPanel.getForm().reset();
+                	}
                 }],
 	            renderTo: Ext.getBody()
 	        });
