@@ -11,13 +11,190 @@
 <link href="../js/extjs 4.2.1/resources/css/ext-all-neptune.css" rel="stylesheet" />
 
 <script type="text/javascript">
+Ext.require([
+             'Ext.grid.*',
+             'Ext.data.*',
+             'Ext.util.*',
+             'Ext.state.*'
+         ]);
+
 Ext.onReady(function(){
+	
+	/*
+	* 一、 创建GridPanel
+    *   ①.先创建Model，模型类
+    *   ②.创建Store，数据仓库
+    *   ③.创建GridPanel
+	*
+	*/
+	//1.定义Model-UserInfo
+	Ext.define('UserInfo',{
+		extend : 'Ext.data.Model',
+		fields : [
+			{name:'name',type:'string'},
+			{name:'age',type:'int'},
+			{name:'phone',type:'string'}
+		]
+	});
+	
+	//2.定义Store-UserStore
+	var userStore = Ext.create('Ext.data.Store',{
+		model : 'UserInfo',
+		autoLoad : true,
+		pagesize : 5,
+		proxy : {
+			type : 'ajax',
+			url : '../js/MyApp/gridPanel-test.json',
+			reader : {
+				root : 'rows'
+			}
+		}
+	});
+	//先创建单元格编辑插件
+	//注意创建语句不要放在组件内部，由于作用域的问题，可能加载不到Ext.grid.plugin.CellEditing组件，所以尽量放到外部创建.
+	var cellEditing = Ext.create('Ext.grid.plugin.CellEditing', {
+        clicksToEdit: 1
+    });
+	//先创建行编辑插件
+    var rowEditing = Ext.create('Ext.grid.plugin.RowEditing', {
+        clicksToMoveEditor: 1,
+        autoCancel: false
+    });
+	
+	//3.创建GridPanel面板
+	var grid = Ext.create('Ext.grid.Panel',{
+		xtype : 'grid',
+		store : userStore,
+		width : 500,
+		height : 200,
+		margin : 30,
+		columnLines : true,
+		renderTo : 'gridpanel-show',
+		/*
+		*     控制Extjs GridPanel行选择模型的两个配置项是selType和selModel。
+		*     默认情况下，selType为rowmodel，对应的Ext.selection.Model。
+		*     这种选择模型不会在grid中添加复选框，它通过点击行进行选中，默认为多选“MULTI”。
+		*/
+		selType : "checkboxmodel",
+		selModel : {
+			injectCheckbox : 0,
+			mode : 'SIMPLE',  //"SIMPLE", "SINGLE", "MULTI"
+			checkOnly : true //只能通过checkbox选择
+		},
+		columns : [
+		     //设置序号列
+            { xtype: "rownumberer", text: "序号", width:20 },
+			{    text : '姓名',
+				dataIndex:'name',
+				lockable:true,
+                locked:true
+			},
+			{   text : '年龄',
+				width    : 100,
+	            sortable : true,
+				dataIndex:'age',
+				xtype: 'numbercolumn', 
+				format: '0',
+				editor : {
+			          xtype : 'numberfield',
+			          decimalPrecision: 0,
+			          selectOnFocus:true
+				 },
+				 renderer : function(val){
+					 if (val > 15) {
+				            return '<span style="color:green;">' + val + '</span>';
+				        } else {
+				            return '<span style="color : red;">' + val + '</span>';
+				        }
+				        return val;
+				 }
+			},
+			{
+				text:'电话',dataIndex:'phone',editor:'textfield'
+			},
+			{header: 'Idno', dataIndex: 'idno', width:150,menuDisabled:true}
+		],
+		plugins: [cellEditing,rowEditing],
+        listeners : {
+        	itemdblclick : function(me, record, item, index, e, eOpts){
+        		//双击事件时
+        		console.info(record);
+        	}
+        },
+		bbar: { xtype: "pagingtoolbar", store: userStore, displayInfo: true }
+	});
 	
 });
 </script>
 
 </head>
 <body>
+<center><h1>Extjs GridPanel用法详解</h1></center>
+Extjs GridPanel 提供了非常强大数据表格功能，在GridPanel可以展示数据列表，可以对数据列表进行选择、编辑等。<br>
+今天我们来介绍一下Extjs中GridPanel的详细用法。<br>
+
+本文的示例代码适用于Extjs 4.x和Extjs 5.x，在Extjs 4.2.1 和Extjs 5.0.1中亲测可用！ <br>
+
+<div id="gridpanel-show"></div>
+
+<h2>下面是列的常用配置项：</h2><br>
+<p style='font-family: "微软雅黑";font-size: 18px;'>
+    xtype：列类型<br>
+    --例如：文本列、数字列、日期列、选择框列、操作列等<br><br>
+    text：列头显示的文字<br><br>
+    dataIndex：绑定的字段名<br><br>
+    width：宽度<br><br>
+    flex：自动适应的宽度<br><br>
+    sortable：是否可排序，默认为是<br><br>
+    hideable：是否可隐藏，默认为是<br><br>
+    locked：锁定列，将列锁定在grid的开头，当grid出现滚动条的时候该属性比较有用。默认为否<br><br>
+    lockable：是否可锁定，默认为否<br><br>
+    format：格式化字符串，常用于日期、数字的格式化。<br>
+    --日期：'Y-m-d'；<br>
+    --日期时间：'Y-m-d H:i:s'；<br>
+    --数字：'0,000.00'（带有千位分隔符、保留两位小数）、'0.00'（保留两位小数），'0'（不保留小数）<br><br>
+    renderer：自定义绘制方法，可以是Ext.util.Format中定义好的方法名称，也可以是自定义否function，<br>
+    该方法接收下面的参数：value、metadata、record、rowIndex、colIndex、store、view，并需要一个用来显示的返回值。<br><br>
+    editor：编辑器，当使用编辑插件的时候才会起作用。<br><br>
+
+</p>
+
+<div style='font-family: "微软雅黑";font-size: 18px;'>
+    <h2>Extjs GridPanel行选择</h2><br><br>
+    <p>
+		除了界面操作来选中行，我们还可以通过代码来选中行：<br>
+		
+		//选择行，并保持其他行的选择状态<br>
+		grid.getSelectionModel().select(records, true);<br>
+		//选择所有<br>
+		grid.getSelectionModel().selectAll();<br>
+		//根据row index选择<br>
+		grid.getSelectionModel().selectRange(startRow, endRow, true)<br>
+    </p>
+    
+    <h2>Extjs GridPanel显示行号</h2><br>
+    <p>
+		默认情况下Extjs GridPanel是不显示行号的，我们需要手动添加行号列。<br>
+		{ xtype: "rownumberer", text: "序号", width:40 }<br>
+    </p>
+    <h2>Extjs GridPanel异步加载数据</h2>
+    <p>
+        <br>
+    </p>
+    <p>
+        <h2>Extjs GridPanel分页</h2><br>
+    </p>
+    <p>
+        <h2>Extjs GridPanel列编辑</h2><br>
+    </p>
+    <p>
+        <h2>Extjs GridPanel选中单元格内容</h2><br>
+    </p>
+    <p>
+        <h2>禁止显示列头部右侧菜单</h2><br>
+    </p>
+</div>
+
 
 </body>
 </html>
