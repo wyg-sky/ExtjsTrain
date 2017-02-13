@@ -137,7 +137,7 @@ Extjs GridPanel 提供了非常强大数据表格功能，在GridPanel可以展�
 
 <div id="gridpanel-show"></div>
 
-<h2>下面是列的常用配置项：</h2><br>
+<h2>一、下面是列的常用配置项：</h2><br>
 <p style='font-family: "微软雅黑";font-size: 18px;'>
     xtype：列类型<br>
     --例如：文本列、数字列、日期列、选择框列、操作列等<br><br>
@@ -160,7 +160,7 @@ Extjs GridPanel 提供了非常强大数据表格功能，在GridPanel可以展�
 </p>
 
 <div style='font-family: "微软雅黑";font-size: 18px;'>
-    <h2>Extjs GridPanel行选择</h2><br><br>
+    <h2>二、Extjs GridPanel行选择</h2>
     <p>
 		除了界面操作来选中行，我们还可以通过代码来选中行：<br>
 		
@@ -172,26 +172,115 @@ Extjs GridPanel 提供了非常强大数据表格功能，在GridPanel可以展�
 		grid.getSelectionModel().selectRange(startRow, endRow, true)<br>
     </p>
     
-    <h2>Extjs GridPanel显示行号</h2><br>
+    <h2>三、Extjs GridPanel显示行号</h2>
     <p>
 		默认情况下Extjs GridPanel是不显示行号的，我们需要手动添加行号列。<br>
 		{ xtype: "rownumberer", text: "序号", width:40 }<br>
     </p>
-    <h2>Extjs GridPanel异步加载数据</h2>
+    <h2>四、Extjs GridPanel异步加载数据</h2>
     <p>
-        <br>
+        Extjs GridPanel的异步加载数据是通过Store来实现的。我们之前已经介绍过Extjs Store的各种代理方式，
+        可以参考我之前的文章：<br>
+        1.Extjs 客户端代理（proxy）<br>
+        2.Extjs 服务器代理（proxy）<br>
+        异步加载通常采用ajax代理.<br>
+        服务器端返回的数据格式如下：<br>
+		{
+		    "rows": [
+		      {
+		          "name": "Tom",
+		          "age": 12,
+		          "phone": "1233455"
+		      },
+		      {
+		          "name": "Jerry",
+		          "age": 12,
+		          "phone": "1233455"
+		      },
+		      {
+		          "name": "Sinbo",
+		          "age": 12,
+		          "phone": "1233455"
+		      },
+		      {
+		          "name": "Jack",
+		          "age": 12,
+		          "phone": "1233455"
+		      },
+		      {
+		          "name": "Johnson ",
+		          "age": 12,
+		          "phone": "1233455"
+		      }
+		    ],
+		    "total": 5
+		}
     </p>
+    
+    <h2>五、Extjs GridPanel分页</h2>
     <p>
-        <h2>Extjs GridPanel分页</h2><br>
+        当GridPanel中数据量大的时候，我们就需要使用分页了。<br>
+        分页的实现由两部来完成:<br>
+        1.首先是在Store中添加pageSize配置项，用来确定每页显示多少行数据；<br>
+        2.然后需要为GridPanel添加PagingToolbar。<br><br>
+		<h5>1. Store添加pageSize配置项 : pageSize: 5,</h5>
+		    在分页参数加上之后，Extjs在执行ajax请求的时候会添加三个参数：<br>
+		    page：当前页<br>
+		    start：起始行的行号<br>
+		    limit：每页数据行数，默认为25；这个参数值就是我们设置的pageSize<br>
+		<h5>2. GridPanel添加PagingToolbar</h5>
+		    bbar: { xtype: "pagingtoolbar", store: store, displayInfo: true }<br>
+		    在完成这两项配置以后，GridPanel就可以使用分页了。<br>
     </p>
+    
+    <h2>六、Extjs GridPanel列编辑</h2>
     <p>
-        <h2>Extjs GridPanel列编辑</h2><br>
+        Extjs GridPanel可以方便的实现列编辑。要实现这个功能需要两步：<br>
+		<h5>1. 添加GridPanel的编辑插件</h5>
+		plugins: [
+		    Ext.create('Ext.grid.plugin.CellEditing', {
+		        clicksToEdit: 1
+		    })
+		],
+
+    <h5>2. 为需要编辑的列指定编辑器</h5>
+	columns: [
+	    {
+	        text: '年龄', dataIndex: 'age', xtype: 'numbercolumn', format: '0',
+	        editor: {
+	            xtype: "numberfield",
+	            decimalPrecision: 0,
+	            selectOnFocus: true
+	        }
+	    }]
+
+   <br> 编辑器可以是一个field的配置，也可以是一个xtype。<br>
+   <img alt="编辑之后红色标记" src="../image/ext4/lesson12_pic1.png"><br>
+   对于编辑后的单元格，会在左上角出现一个红色的标识，说明该数据是编辑过的，要想去掉这个红色箭头，需要调用record的commit()方法。<br>
+	grid.on('edit', function (editor, e) {<br>
+	    &nbsp;&nbsp;&nbsp;// commit the changes right after editing finished<br>
+	    &nbsp;&nbsp;&nbsp;e.record.commit();<br>
+	});<br>
+	<br>
+	除了单元格编辑外，Extjs还支持行编辑功能，只需要将插件替换为RowEditing即可。
     </p>
+    
+    <h2>七、Extjs GridPanel选中单元格内容</h2>
     <p>
-        <h2>Extjs GridPanel选中单元格内容</h2><br>
+        在默认情况下，Extjs GridPanel不允许进行选中单元格中的内容，由于不能选中，我们就不可能来复制单元格中的内容。如果要实现这种功能，我们需要通过viewConfig来实现。<br>
+		代码如下：<br>
+		viewConfig:{<br>
+		    &nbsp;&nbsp;&nbsp;stripeRows:true,//在表格中显示斑马线<br>
+		    &nbsp;&nbsp;&nbsp;enableTextSelection:true //可以复制单元格文字<br>
+		}<br>
     </p>
+    
+    <h2>八、禁止显示列头部右侧菜单</h2><br>
     <p>
-        <h2>禁止显示列头部右侧菜单</h2><br>
+        Extjs GridPanel的列，当我们点击列头的时候，会出现一个菜单：<br>
+        <img alt="编辑之后红色标记" src="../image/ext4/lesson12_pic2.png"><br>
+        如果我们要禁用这个菜单，可以将每个column定义属性menuDisabled指定为true，代码如下：<br>
+        {header: '列标题', dataIndex: '数据对应字段名', width:150,menuDisabled:true}<br><br>
     </p>
 </div>
 
