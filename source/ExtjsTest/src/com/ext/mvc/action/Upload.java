@@ -45,6 +45,7 @@ public class Upload extends HttpServlet {
 	 * 通过Get方法，访问指定路径的图片，将图片转换成数据流返回。
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	    System.out.println("================>访问指定路径的图片，将图片转换成数据流返回方法-doGet");
 	    String type = request.getParameter("type");
 	    if(StringUtils.isNotBlank(type) && type.equals("showImage")){
 	        response.setContentType("image/jpeg");//设置相应信息的类型
@@ -85,6 +86,7 @@ public class Upload extends HttpServlet {
 	 * 在Post方法中调用，文件上传实现类。
 	 */
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	    System.out.println("================>访问文件上传实现类方法-doPost");
 	    request.setCharacterEncoding("utf-8");
 	    response.setContentType("text/html;charset=utf-8");//放在第一行
 	    PrintWriter out = null;

@@ -246,7 +246,7 @@
                                                             closable:false,
                                                             animEl: 'loding'
                                                           });
-                                                        formPanel.getForm().submit({
+                                                        uploadFormPanel.getForm().submit({
                                                     	   //standardSubmit: true, 同步提交
                                                     	    url : rootUrl + '/UploadImage',
 															params: {
@@ -263,12 +263,13 @@
 	                                                            fileName.setValue(pathStr);
 	                                                            myphoto.dom.src =  '/ExtjsTest/UploadImage?type=showImage&path='+pathStr;
 	                                                            Ext.Msg.alert('提示','上传成功！');
-	                                                         },
+	                                                         }
+															/* ,
 	                                                          failure: function(form, action){
 	                                                        	  var msg = action.result ? Ext.JSON.decode(action.result) : '异常，上传失败';
 	                                                        	   //console.info(action.failureType);
 	                                                        	   Ext.Msg.alert('Error', msg);
-	                                                          }
+	                                                          } */
                                                        });
                                                         
                                                         
